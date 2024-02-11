@@ -1,3 +1,4 @@
+import java.awt.Button;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -8,7 +9,12 @@ import java.net.UnknownHostException;
 
 public class ServidorTCP {
 
-	public static void main(String[] args) {
+	
+	public static void main(String[] args) {	
+
+		Integer turno = 1;
+		Boolean jugando = false;
+		
 		// Primero indicamos la dirección IP local
 		try {
 			System.out.println("LocalHost = " + InetAddress.getLocalHost().toString());
@@ -28,11 +34,12 @@ public class ServidorTCP {
 			System.exit(-1);
 		}
 		
+		/*
 		// Inicializar el juego
 		boolean[][]mesa= new boolean[3][3];	
-		boolean jugando = false;
 		
 		initJuego(mesa, jugando);
+		*/
 		
 		while(jugando) {
 			
@@ -45,11 +52,39 @@ public class ServidorTCP {
 				DataInputStream dis1 = new DataInputStream(socketDelCliente1.getInputStream());
 				DataOutputStream dos1 = new DataOutputStream(socketDelCliente1.getOutputStream());
 				
-				// Flujos de entrada y salida del Cliente 1
+				// Flujos de entrada y salida del Cliente 2
 				DataInputStream dis2 = new DataInputStream(socketDelCliente2.getInputStream());
 				DataOutputStream dos2 = new DataOutputStream(socketDelCliente2.getOutputStream());
 				
-
+				// Botón A1
+				Boolean bstate_A1 = dis1.readBoolean();
+				String btext_A1 = dis1.readLine();				
+			
+				Boolean bstate_A2 = dis1.readBoolean();
+				Boolean bstate_A3 = dis1.readBoolean();
+				Boolean bstate_B1 = dis1.readBoolean();
+				Boolean bstate_B2 = dis1.readBoolean();
+				Boolean bstate_B3 = dis1.readBoolean();
+				Boolean bstate_C1 = dis1.readBoolean();
+				Boolean bstate_C2 = dis1.readBoolean();
+				Boolean bstate_C3 = dis1.readBoolean();
+				
+				//* El otro cliente recibe los objetos BotonCliente
+					// que contienen el bstate y el símbolo
+						//en sus propio tablero tiene que setear lo siguiente: los viejos los cambia por los nuevos
+							// los que tengan el bstate = true --> deshabilitar el botón
+							// los que tengan el simbolo "X" los pone a "X"
+							// los que tengan el símbolo "O" los pone a "O"
+				
+				
+				// recibe información de los 9 bstates y también +1 a la fase
+				
+				// comprobar información
+				// comprobarVictoria();
+				
+				// cargar información y la fase al otro
+				
+					
 				
 			} catch (IOException e) {	
 				e.printStackTrace();
@@ -58,6 +93,7 @@ public class ServidorTCP {
 		}
 	}
 
+	// BORRAR?
 	private static void initJuego(boolean[][] juego, boolean jugando) {
 		jugando = true;
 		
