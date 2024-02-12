@@ -13,7 +13,7 @@ public class ServidorTCP {
 	public static void main(String[] args) {	
 
 		Integer turno = 1;
-		Boolean jugando = false;
+		Boolean jugando = true;
 		
 		// Primero indicamos la dirección IP local
 		try {
@@ -28,7 +28,7 @@ public class ServidorTCP {
 
 		try {
 			//Se crea el socket servidor y se limita las conexiones a dos
-			socketDelServidor = new ServerSocket(1234, 2);
+			socketDelServidor = new ServerSocket(40000,2);
 			System.out.println("Esperando a que se conecten los usuarios...");
 		} catch (IOException ioe) {
 			System.err.println("Error al abrir el socket de servidor : " + ioe);

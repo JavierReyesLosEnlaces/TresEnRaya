@@ -8,7 +8,6 @@ import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -47,7 +46,22 @@ public class Cliente_view {
 				// Se conecta 
 				InetAddress direcc = null;
 				try {
-					direcc = InetAddress.getByName("10.5.4.15"); // la ip del servidor 					
+					direcc = InetAddress.getByName("10.5.4.39"); // la ip del servidor 	
+					int puerto = 40000; 
+					
+					DataInputStream dis = null;
+					DataOutputStream dos = null; 
+					
+					try(Socket socketDelCliente = new Socket(direcc, puerto)){
+						System.out.println("Cliente conectado");
+						// Se extraen los streams de entrada y salida del socket del cliente
+						dis = new DataInputStream(socketDelCliente.getInputStream());
+						dos = new DataOutputStream(socketDelCliente.getOutputStream());
+						 dos.flush();
+					}catch(Exception e){
+						
+						System.out.println("Cliente no conectado");
+					}
 				} catch (UnknownHostException uhe) {
 					System.err.println("Servidor no encontrado : " + uhe);
 					System.exit(-1);
@@ -55,27 +69,20 @@ public class Cliente_view {
 				
 				// Main de cliente
 
-
-				int puerto = 1234; 
-				
-				DataInputStream dis = null;
-				DataOutputStream dos = null; 
-				
-				try {
-					// Crea un nuevo socket y lo conecta a 	una dirección y un puerto específicos
-					Socket socketDelCliente = new Socket(direcc, puerto);
-
-					// Se extraen los streams de entrada y salida del socket del cliente
-					dis = new DataInputStream(socketDelCliente.getInputStream());
-					dos = new DataOutputStream(socketDelCliente.getOutputStream());
-								
-
-		            // Flushing para asegurar que los datos se envíen
-		            dos.flush();
-					
-				}catch(IOException e) {
-					e.printStackTrace();
-				}
+				/*
+				 * int puerto = 1234;
+				 * 
+				 * DataInputStream dis = null; DataOutputStream dos = null;
+				 * 
+				 * try(Socket socketDelCliente = new Socket(direcc, puerto)){
+				 * System.out.println("Cliente conectado"); // Se extraen los streams de entrada
+				 * y salida del socket del cliente dis = new
+				 * DataInputStream(socketDelCliente.getInputStream()); dos = new
+				 * DataOutputStream(socketDelCliente.getOutputStream()); dos.flush();
+				 * }catch(Exception e){
+				 * 
+				 * System.out.println("Cliente no conectado"); }
+				 */
 				
 				
 				
