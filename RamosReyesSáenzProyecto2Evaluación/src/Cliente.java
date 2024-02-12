@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class Cliente1 {
+public class Cliente {
 
 	public static void main(String[] args) {
 
@@ -22,8 +22,6 @@ public class Cliente1 {
 		
 		DataInputStream dis = null;
 		DataOutputStream dos = null; 
-		Integer x = null , y = null;
-		boolean valor = false;
 		
 		try {
 			// Crea un nuevo socket y lo conecta a 	una dirección y un puerto específicos
@@ -33,10 +31,6 @@ public class Cliente1 {
 			dis = new DataInputStream(socketDelCliente.getInputStream());
 			dos = new DataOutputStream(socketDelCliente.getOutputStream());
 						
-            // Escribir las coordenadas x, y y el valor booleano
-            dos.writeInt(x);
-            dos.writeInt(y);
-            dos.writeBoolean(valor);
 
             // Flushing para asegurar que los datos se envíen
             dos.flush();

@@ -27,7 +27,8 @@ public class ServidorTCP {
 		
 
 		try {
-			socketDelServidor = new ServerSocket(1234);
+			//Se crea el socket servidor y se limita las conexiones a dos
+			socketDelServidor = new ServerSocket(1234, 2);
 			System.out.println("Esperando a que se conecten los usuarios...");
 		} catch (IOException ioe) {
 			System.err.println("Error al abrir el socket de servidor : " + ioe);

@@ -6,11 +6,15 @@ import javax.swing.JLabel;
 import java.awt.Font;
 import java.awt.Color;
 import java.awt.event.ActionListener;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.awt.event.ActionEvent;
 
-public class Cliente1_view {
+public class Cliente_view {
 	
 	// Variable turno 	
 	public Integer turno; 
@@ -34,7 +38,7 @@ public class Cliente1_view {
 				
 				// Se inicia la interfaz
 				try {
-					Cliente1_view window = new Cliente1_view();
+					Cliente_view window = new Cliente_view();
 					window.frmTresEnRaya.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -43,11 +47,54 @@ public class Cliente1_view {
 				// Se conecta 
 				InetAddress direcc = null;
 				try {
-					direcc = InetAddress.getByName("localhost");					
+					direcc = InetAddress.getByName("10.5.4.15"); // la ip del servidor 					
 				} catch (UnknownHostException uhe) {
-					System.err.println("Host no encontrado : " + uhe);
+					System.err.println("Servidor no encontrado : " + uhe);
 					System.exit(-1);
 				}
+				
+				// Main de cliente
+
+
+				int puerto = 1234; 
+				
+				DataInputStream dis = null;
+				DataOutputStream dos = null; 
+				
+				try {
+					// Crea un nuevo socket y lo conecta a 	una dirección y un puerto específicos
+					Socket socketDelCliente = new Socket(direcc, puerto);
+
+					// Se extraen los streams de entrada y salida del socket del cliente
+					dis = new DataInputStream(socketDelCliente.getInputStream());
+					dos = new DataOutputStream(socketDelCliente.getOutputStream());
+								
+
+		            // Flushing para asegurar que los datos se envíen
+		            dos.flush();
+					
+				}catch(IOException e) {
+					e.printStackTrace();
+				}
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
 				
 				// Recibe información
 				
@@ -60,7 +107,7 @@ public class Cliente1_view {
 	/**
 	 * Create the application.
 	 */
-	public Cliente1_view() {
+	public Cliente_view() {
 		initialize();
 	}
 
