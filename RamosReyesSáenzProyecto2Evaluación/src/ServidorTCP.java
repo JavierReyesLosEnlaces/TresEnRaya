@@ -12,7 +12,7 @@ public class ServidorTCP {
 	
 	public static void main(String[] args) {	
 
-		Integer turno = 1;
+		Integer turno = 0;
 			
 		Boolean jugando = true, jugador;
 		
@@ -46,20 +46,29 @@ public class ServidorTCP {
 		while(jugando) {
 			
 			try {
-				// Esperamos a que alguien se conecte a nuestroSocket
-				Socket socketDelCliente1 = socketDelServidor.accept();
-				Socket socketDelCliente2 = socketDelServidor.accept();
+				if(turno==0) {
+					// Esperamos a que alguien se conecte a nuestroSocket
+					Socket socketDelCliente1 = socketDelServidor.accept();
+					Socket socketDelCliente2 = socketDelServidor.accept();
+
+					// Flujos de entrada y salida del Cliente 1
+					// DataInputStream dis1 = new DataInputStream(socketDelCliente1.getInputStream());
+					DataOutputStream dos1 = new DataOutputStream(socketDelCliente1.getOutputStream());
+					
+					// Pongamos que el cliente 1 empieza la partida
+					dos1.writeBoolean(true);
+					
+					// Flujos de entrada y salida del Cliente 2
+					//DataInputStream dis2 = new DataInputStream(socketDelCliente2.getInputStream());
+					DataOutputStream dos2 = new DataOutputStream(socketDelCliente2.getOutputStream());
+					
+					dos2.writeBoolean(false);
+					
+				}
 				
 				
 				// Tirar la moneda y enviar la información de quién empieza
 				
-				// Flujos de entrada y salida del Cliente 1
-				DataInputStream dis1 = new DataInputStream(socketDelCliente1.getInputStream());
-				DataOutputStream dos1 = new DataOutputStream(socketDelCliente1.getOutputStream());
-				
-				// Flujos de entrada y salida del Cliente 2
-				DataInputStream dis2 = new DataInputStream(socketDelCliente2.getInputStream());
-				DataOutputStream dos2 = new DataOutputStream(socketDelCliente2.getOutputStream());
 				
 				
 				//* El otro cliente recibe los objetos BotonCliente
