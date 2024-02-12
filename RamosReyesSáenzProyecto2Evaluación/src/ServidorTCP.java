@@ -2,20 +2,24 @@ import java.awt.Button;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 public class ServidorTCP {
 
 	
 	public static void main(String[] args) {	
 
-		Integer turno = 0;
-			
+
+		Integer turno = 0;			
 		Boolean jugando = true, jugador;
 		
+	// FASE INICIAL
 		// Primero indicamos la dirección IP local
 		try {
 			System.out.println("LocalHost = " + InetAddress.getLocalHost().toString());
@@ -35,35 +39,39 @@ public class ServidorTCP {
 			System.err.println("Error al abrir el socket de servidor : " + ioe);
 			System.exit(-1);
 		}
-		
-		/*
-		// Inicializar el juego
-		boolean[][]mesa= new boolean[3][3];	
-		
-		initJuego(mesa, jugando);
-		*/
-		
+
+	// FASE DE JUEGO
 		while(jugando) {
 			
 			try {
+				// Esperamos a que alguien se conecte a nuestroSocket
+				Socket socketDelCliente1 = socketDelServidor.accept();
+				Socket socketDelCliente2 = socketDelServidor.accept();
 				if(turno==0) {
-					// Esperamos a que alguien se conecte a nuestroSocket
-					Socket socketDelCliente1 = socketDelServidor.accept();
-					Socket socketDelCliente2 = socketDelServidor.accept();
 
-					// Flujos de entrada y salida del Cliente 1
-					// DataInputStream dis1 = new DataInputStream(socketDelCliente1.getInputStream());
-					DataOutputStream dos1 = new DataOutputStream(socketDelCliente1.getOutputStream());
-					
-					// Pongamos que el cliente 1 empieza la partida
+					// Asignación de booleanos
+					DataOutputStream dos1 = new DataOutputStream(socketDelCliente1.getOutputStream());									
 					dos1.writeBoolean(true);
-					
-					// Flujos de entrada y salida del Cliente 2
-					//DataInputStream dis2 = new DataInputStream(socketDelCliente2.getInputStream());
-					DataOutputStream dos2 = new DataOutputStream(socketDelCliente2.getOutputStream());
-					
-					dos2.writeBoolean(false);
-					
+				
+					DataOutputStream dos2 = new DataOutputStream(socketDelCliente2.getOutputStream());				
+					dos2.writeBoolean(false);					
+				}else {
+					if(turno%2!=0) {
+						System.out.println("Turno del jugador 1!");
+						ObjectInputStream ois = new ObjectInputStream(socketDelCliente1.getInputStream());
+						if(comprobarVictoria((ArrayList<BotonCliente>) ois.readObject())) {
+							// Se ha ganado
+							System.out.println("Se ha ganado el jugador 1");
+							jugando = false;
+							// Se tendrá que enviar los resultados de la partida a los jugadores
+						}
+						ObjectOutputStream oos = new ObjectOutputStream(socketDelCliente1.getOutputStream());
+					}else {
+						System.out.println("Turno del jugador 1!");
+						ObjectInputStream ois = new ObjectInputStream(socketDelCliente2.getInputStream());
+						comprobarVictoria((ArrayList<BotonCliente>) ois.readObject());
+						ObjectOutputStream oos = new ObjectOutputStream(socketDelCliente2.getOutputStream());				
+					}
 				}
 				
 				
@@ -88,11 +96,15 @@ public class ServidorTCP {
 				
 					
 				
-			} catch (IOException e) {	
+			} catch (IOException | ClassNotFoundException e) {	
 				e.printStackTrace();
 			}
 
 		}
+	}
+
+	private static Boolean comprobarVictoria(ArrayList<BotonCliente> botones) {
+			return false;	
 	}
 
 	// BORRAR?

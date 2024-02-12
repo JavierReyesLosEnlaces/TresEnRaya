@@ -81,7 +81,7 @@ public class Cliente_view {
 							valorSimbolo = "X";
 						}else {
 							valorSimbolo = "0";
-							enviarInfo();
+							//enviarInfo();
 						}
 						
 					}catch(Exception e){						
