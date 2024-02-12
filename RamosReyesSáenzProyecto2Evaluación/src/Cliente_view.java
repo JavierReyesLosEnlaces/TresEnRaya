@@ -8,9 +8,13 @@ import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 
 public class Cliente_view {
@@ -18,24 +22,41 @@ public class Cliente_view {
 	// Variable turno 	
 	public Integer turno; 
 	
+	private static DataInputStream dis;
+	private DataOutputStream dos = null; 
+	private ObjectInputStream ois;
+	private static String valorSimbolo = "";
+	private static ObjectOutputStream oos;
+	private static ArrayList<BotonCliente> botones;
+	
+	// Botones interfaz
+	private	static JButton btn_A1;
+	private static JButton btn_A2;
+	private static JButton btn_A3;
+	private static JButton btn_B1;
+	private static JButton btn_B2;
+	private static JButton btn_B3;
+	private static JButton btn_C1;
+	private static JButton btn_C2;
+	private static JButton btn_C3;
+	
 	// BotonesCliente	
-	BotonCliente bc_A1 = new BotonCliente();
-	BotonCliente bc_A2 = new BotonCliente();
-	BotonCliente bc_A3 = new BotonCliente();
-	BotonCliente bc_B1 = new BotonCliente();
-	BotonCliente bc_B2 = new BotonCliente();
-	BotonCliente bc_B3 = new BotonCliente();
-	BotonCliente bc_C1 = new BotonCliente();
-	BotonCliente bc_C2 = new BotonCliente();
-	BotonCliente bc_C3 = new BotonCliente();
+	private static BotonCliente bc_A1 = new BotonCliente();
+	private static BotonCliente bc_A2 = new BotonCliente();
+	private static BotonCliente bc_A3 = new BotonCliente();
+	private static BotonCliente bc_B1 = new BotonCliente();
+	private static BotonCliente bc_B2 = new BotonCliente();
+	private static BotonCliente bc_B3 = new BotonCliente();
+	private static BotonCliente bc_C1 = new BotonCliente();
+	private static BotonCliente bc_C2 = new BotonCliente();
+	private static BotonCliente bc_C3 = new BotonCliente();
 	
 	private JFrame frmTresEnRaya;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				
-				// Se inicia la interfaz
+				// SE INICIA LA INTERFAZ
 				try {
 					Cliente_view window = new Cliente_view();
 					window.frmTresEnRaya.setVisible(true);
@@ -43,23 +64,27 @@ public class Cliente_view {
 					e.printStackTrace();
 				}
 				
-				// Se conecta 
+				// EL CLIENTE SE CONECTA CON EL SERVIDOR
 				InetAddress direcc = null;
 				try {
-					direcc = InetAddress.getByName("10.5.4.39"); // la ip del servidor 	
-					int puerto = 40000; 
-					
-					DataInputStream dis = null;
-					DataOutputStream dos = null; 
-					
+					direcc = InetAddress.getByName("localhost"); // la ip del servidor 	
+					int puerto = 40000; 					
 					try(Socket socketDelCliente = new Socket(direcc, puerto)){
+						oos = new ObjectOutputStream(socketDelCliente.getOutputStream());											
 						System.out.println("Cliente conectado");
-						// Se extraen los streams de entrada y salida del socket del cliente
-						dis = new DataInputStream(socketDelCliente.getInputStream());
-						dos = new DataOutputStream(socketDelCliente.getOutputStream());
-						 dos.flush();
-					}catch(Exception e){
 						
+						
+						// RECIBE EL BOOLEANO
+						dis = new DataInputStream(socketDelCliente.getInputStream());
+						
+						if(dis.readBoolean()) {
+							valorSimbolo = "X";
+						}else {
+							valorSimbolo = "0";
+							enviarInfo();
+						}
+						
+					}catch(Exception e){						
 						System.out.println("Cliente no conectado");
 					}
 				} catch (UnknownHostException uhe) {
@@ -67,46 +92,9 @@ public class Cliente_view {
 					System.exit(-1);
 				}
 				
-				// Main de cliente
-
-				/*
-				 * int puerto = 1234;
-				 * 
-				 * DataInputStream dis = null; DataOutputStream dos = null;
-				 * 
-				 * try(Socket socketDelCliente = new Socket(direcc, puerto)){
-				 * System.out.println("Cliente conectado"); // Se extraen los streams de entrada
-				 * y salida del socket del cliente dis = new
-				 * DataInputStream(socketDelCliente.getInputStream()); dos = new
-				 * DataOutputStream(socketDelCliente.getOutputStream()); dos.flush();
-				 * }catch(Exception e){
-				 * 
-				 * System.out.println("Cliente no conectado"); }
-				 */
+				// EL CLIENTE RECIBE INFORMACIÓN 
+				// Recibe el booleano y asigna su símbolo
 				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				// Recibe información
-				
-				// Se reciben los nueve objetos
-				// Se recibe la variable "turno" 
 			}						
 		});
 	}
@@ -149,119 +137,119 @@ public class Cliente_view {
 		
 		// Botones (A-C: columnas, numeros: filas)
 		
-		JButton btn_A1 = new JButton("");
+		btn_A1 = new JButton("");
 		btn_A1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_A1.setBstate(true);
-				bc_A1.setSimbolo("X");
+				bc_A1.setSimbolo(valorSimbolo);
 				btn_A1.setText(bc_A1.getSimbolo());
 				btn_A1.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_A1.setBounds(59, 20, 77, 19);
 		btn_A1.setSize(70, 70);
 		frmTresEnRaya.getContentPane().add(btn_A1);
 		
-		JButton btn_A2 = new JButton("");
+		btn_A2 = new JButton("");
 		btn_A2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_A2.setBstate(true);
-				bc_A2.setSimbolo("X");
+				bc_A2.setSimbolo(valorSimbolo);
 				btn_A2.setText(bc_A2.getSimbolo());
 				btn_A2.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_A2.setBounds(137, 20, 70, 70);
 		frmTresEnRaya.getContentPane().add(btn_A2);
 		
-		JButton btn_A3 = new JButton("");
+		btn_A3 = new JButton("");
 		btn_A3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_A3.setBstate(true);
-				bc_A3.setSimbolo("X");
+				bc_A3.setSimbolo(valorSimbolo);
 				btn_A3.setText(bc_A3.getSimbolo());
 				btn_A3.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_A3.setBounds(215, 20, 70, 70);
 		frmTresEnRaya.getContentPane().add(btn_A3);
 		
-		JButton btn_B1 = new JButton("");
+		btn_B1 = new JButton("");
 		btn_B1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_B1.setBstate(true);
-				bc_B1.setSimbolo("X");
+				bc_B1.setSimbolo(valorSimbolo);
 				btn_B1.setText(bc_B1.getSimbolo());
 				btn_B1.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_B1.setBounds(59, 98, 70, 70);
 		frmTresEnRaya.getContentPane().add(btn_B1);
 		
-		JButton btn_B2 = new JButton("");
+		btn_B2 = new JButton("");
 		btn_B2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_B2.setBstate(true);
-				bc_B2.setSimbolo("X");
+				bc_B2.setSimbolo(valorSimbolo);
 				btn_B2.setText(bc_B2.getSimbolo());
 				btn_B2.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_B2.setBounds(137, 98, 70, 70);
 		frmTresEnRaya.getContentPane().add(btn_B2);
 		
-		JButton btn_B3 = new JButton("");
+		btn_B3 = new JButton("");
 		btn_B3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_B3.setBstate(true);
-				bc_B3.setSimbolo("X");
+				bc_B3.setSimbolo(valorSimbolo);
 				btn_B3.setText(bc_B3.getSimbolo());
 				btn_B3.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_B3.setBounds(215, 98, 70, 70);
 		frmTresEnRaya.getContentPane().add(btn_B3);
 		
-		JButton btn_C1 = new JButton("");
+		btn_C1 = new JButton("");
 		btn_C1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_C1.setBstate(true);
-				bc_C1.setSimbolo("X");
+				bc_C1.setSimbolo(valorSimbolo);
 				btn_C1.setText(bc_C1.getSimbolo());
 				btn_C1.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_C1.setBounds(59, 176, 70, 70);
 		frmTresEnRaya.getContentPane().add(btn_C1);
 		
-		JButton btn_C2 = new JButton("");
+		btn_C2 = new JButton("");
 		btn_C2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_C2.setBstate(true);
-				bc_C2.setSimbolo("X");
+				bc_C2.setSimbolo(valorSimbolo);
 				btn_C2.setText(bc_C2.getSimbolo());
 				btn_C2.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_C2.setBounds(137, 176, 70, 70);
 		frmTresEnRaya.getContentPane().add(btn_C2);
 		
-		JButton btn_C3 = new JButton("");
+		btn_C3 = new JButton("");
 		btn_C3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				bc_C3.setBstate(true);
-				bc_C3.setSimbolo("X");
+				bc_C3.setSimbolo(valorSimbolo);
 				btn_C3.setText(bc_C3.getSimbolo());
 				btn_C3.setEnabled(false);
-				enviar();
+				enviarInfo();
 			}
 		});
 		btn_C3.setBounds(215, 176, 70, 70);
@@ -269,8 +257,37 @@ public class Cliente_view {
 	}
 
 	
-	public void enviar() {
+	public static void enviarInfo() {
 		
+		// LOS BOTONES DEL TABLERO SE BLOQUEAN
+		btn_A1.setEnabled(false);
+		btn_A2.setEnabled(false);
+		btn_A3.setEnabled(false);
+		btn_B1.setEnabled(false);
+		btn_B2.setEnabled(false);
+		btn_B3.setEnabled(false);
+		btn_C1.setEnabled(false);
+		btn_C2.setEnabled(false);
+		btn_C3.setEnabled(false);
+		
+		// METES EL ESTADO DE CADA BOTÓN DENTRO DE 'botones'
+		botones.add(bc_A1);
+		botones.add(bc_A2);
+		botones.add(bc_A3);
+		botones.add(bc_B1);
+		botones.add(bc_B2);
+		botones.add(bc_B3);
+		botones.add(bc_C1);
+		botones.add(bc_C2);
+		botones.add(bc_C3);
+		
+		// SE ENVÍA 'botones'
+		try {
+			oos.writeObject(botones);
+			System.out.println("Se ha enviado 'botones'");
+		} catch (IOException e) {
+			System.out.println("No se ha enviado 'botones'");
+		}
 	}
 	
 	

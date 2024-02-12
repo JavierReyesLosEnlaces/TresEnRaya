@@ -1,5 +1,6 @@
+import java.io.Serializable;
 
-public class BotonCliente {
+public class BotonCliente implements Serializable{
 	
 	private Boolean bstate = false;
 	private String simbolo = " ";

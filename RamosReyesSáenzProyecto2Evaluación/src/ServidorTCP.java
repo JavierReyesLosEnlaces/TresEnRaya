@@ -13,7 +13,8 @@ public class ServidorTCP {
 	public static void main(String[] args) {	
 
 		Integer turno = 1;
-		Boolean jugando = true;
+			
+		Boolean jugando = true, jugador;
 		
 		// Primero indicamos la dirección IP local
 		try {
@@ -49,6 +50,9 @@ public class ServidorTCP {
 				Socket socketDelCliente1 = socketDelServidor.accept();
 				Socket socketDelCliente2 = socketDelServidor.accept();
 				
+				
+				// Tirar la moneda y enviar la información de quién empieza
+				
 				// Flujos de entrada y salida del Cliente 1
 				DataInputStream dis1 = new DataInputStream(socketDelCliente1.getInputStream());
 				DataOutputStream dos1 = new DataOutputStream(socketDelCliente1.getOutputStream());
@@ -57,18 +61,6 @@ public class ServidorTCP {
 				DataInputStream dis2 = new DataInputStream(socketDelCliente2.getInputStream());
 				DataOutputStream dos2 = new DataOutputStream(socketDelCliente2.getOutputStream());
 				
-				// Botón A1
-				Boolean bstate_A1 = dis1.readBoolean();
-				String btext_A1 = dis1.readLine();				
-			
-				Boolean bstate_A2 = dis1.readBoolean();
-				Boolean bstate_A3 = dis1.readBoolean();
-				Boolean bstate_B1 = dis1.readBoolean();
-				Boolean bstate_B2 = dis1.readBoolean();
-				Boolean bstate_B3 = dis1.readBoolean();
-				Boolean bstate_C1 = dis1.readBoolean();
-				Boolean bstate_C2 = dis1.readBoolean();
-				Boolean bstate_C3 = dis1.readBoolean();
 				
 				//* El otro cliente recibe los objetos BotonCliente
 					// que contienen el bstate y el símbolo
