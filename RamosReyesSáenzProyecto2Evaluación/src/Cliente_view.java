@@ -149,15 +149,7 @@ public class Cliente_view {
 				btn_A1.setText(bc_A1.getSimbolo());
 				btn_A1.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_A1.setBounds(59, 20, 77, 19);
@@ -172,15 +164,7 @@ public class Cliente_view {
 				btn_A2.setText(bc_A2.getSimbolo());
 				btn_A2.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_A2.setBounds(137, 20, 70, 70);
@@ -194,15 +178,7 @@ public class Cliente_view {
 				btn_A3.setText(bc_A3.getSimbolo());
 				btn_A3.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_A3.setBounds(215, 20, 70, 70);
@@ -216,15 +192,7 @@ public class Cliente_view {
 				btn_B1.setText(bc_B1.getSimbolo());
 				btn_B1.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_B1.setBounds(59, 98, 70, 70);
@@ -238,15 +206,7 @@ public class Cliente_view {
 				btn_B2.setText(bc_B2.getSimbolo());
 				btn_B2.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_B2.setBounds(137, 98, 70, 70);
@@ -260,15 +220,7 @@ public class Cliente_view {
 				btn_B3.setText(bc_B3.getSimbolo());
 				btn_B3.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_B3.setBounds(215, 98, 70, 70);
@@ -282,15 +234,7 @@ public class Cliente_view {
 				btn_C1.setText(bc_C1.getSimbolo());
 				btn_C1.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_C1.setBounds(59, 176, 70, 70);
@@ -304,15 +248,7 @@ public class Cliente_view {
 				btn_C2.setText(bc_C2.getSimbolo());
 				btn_C2.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_C2.setBounds(137, 176, 70, 70);
@@ -326,15 +262,7 @@ public class Cliente_view {
 				btn_C3.setText(bc_C3.getSimbolo());
 				btn_C3.setEnabled(false);
 				enviarInfo();
-				try {
-					recibirJugada();
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				
 			}
 		});
 		btn_C3.setBounds(215, 176, 70, 70);
@@ -344,16 +272,7 @@ public class Cliente_view {
 	
 	public static void enviarInfo() {
 		
-		// LOS BOTONES DEL TABLERO SE BLOQUEAN
-		btn_A1.setEnabled(false);
-		btn_A2.setEnabled(false);
-		btn_A3.setEnabled(false);
-		btn_B1.setEnabled(false);
-		btn_B2.setEnabled(false);
-		btn_B3.setEnabled(false);
-		btn_C1.setEnabled(false);
-		btn_C2.setEnabled(false);
-		btn_C3.setEnabled(false);
+		
 		
 		// METES EL ESTADO DE CADA BOTÓN DENTRO DE 'botones'
 		botones.add(bc_A1);
@@ -373,6 +292,16 @@ public class Cliente_view {
 		} catch (IOException e) {
 			System.out.println("No se ha enviado 'botones'");
 		}
+		// LOS BOTONES DEL TABLERO SE BLOQUEAN
+				btn_A1.setEnabled(false);
+				btn_A2.setEnabled(false);
+				btn_A3.setEnabled(false);
+				btn_B1.setEnabled(false);
+				btn_B2.setEnabled(false);
+				btn_B3.setEnabled(false);
+				btn_C1.setEnabled(false);
+				btn_C2.setEnabled(false);
+				btn_C3.setEnabled(false);
 	}
 	@SuppressWarnings("unchecked")
 	public static void recibirJugada() throws ClassNotFoundException, IOException {
@@ -380,15 +309,15 @@ public class Cliente_view {
 		botones.clear();
 		botones=(ArrayList<BotonCliente>)ois.readObject();
 		
-		btn_A1.setText(botones.get(0).getSimbolo()); if(botones.get(0).getBstate()) {btn_A1.setEnabled(false);}
-		btn_A2.setText(botones.get(1).getSimbolo()); if(botones.get(1).getBstate()) {btn_A2.setEnabled(false);}
-		btn_A3.setText(botones.get(2).getSimbolo()); if(botones.get(2).getBstate()) {btn_A3.setEnabled(false);}
-		btn_B1.setText(botones.get(3).getSimbolo()); if(botones.get(3).getBstate()) {btn_B1.setEnabled(false);}
-		btn_B2.setText(botones.get(4).getSimbolo()); if(botones.get(4).getBstate()) {btn_B2.setEnabled(false);}
-		btn_B3.setText(botones.get(5).getSimbolo()); if(botones.get(5).getBstate()) {btn_B3.setEnabled(false);}
-		btn_C1.setText(botones.get(6).getSimbolo()); if(botones.get(6).getBstate()) {btn_C1.setEnabled(false);}
-		btn_C2.setText(botones.get(7).getSimbolo()); if(botones.get(7).getBstate()) {btn_C2.setEnabled(false);}
-		btn_C3.setText(botones.get(8).getSimbolo()); if(botones.get(8).getBstate()) {btn_C3.setEnabled(false);}
+		btn_A1.setText(botones.get(0).getSimbolo()); if(botones.get(0).getBstate()) {btn_A1.setEnabled(true);}
+		btn_A2.setText(botones.get(1).getSimbolo()); if(botones.get(1).getBstate()) {btn_A2.setEnabled(true);}
+		btn_A3.setText(botones.get(2).getSimbolo()); if(botones.get(2).getBstate()) {btn_A3.setEnabled(true);}
+		btn_B1.setText(botones.get(3).getSimbolo()); if(botones.get(3).getBstate()) {btn_B1.setEnabled(true);}
+		btn_B2.setText(botones.get(4).getSimbolo()); if(botones.get(4).getBstate()) {btn_B2.setEnabled(true);}
+		btn_B3.setText(botones.get(5).getSimbolo()); if(botones.get(5).getBstate()) {btn_B3.setEnabled(true);}
+		btn_C1.setText(botones.get(6).getSimbolo()); if(botones.get(6).getBstate()) {btn_C1.setEnabled(true);}
+		btn_C2.setText(botones.get(7).getSimbolo()); if(botones.get(7).getBstate()) {btn_C2.setEnabled(true);}
+		btn_C3.setText(botones.get(8).getSimbolo()); if(botones.get(8).getBstate()) {btn_C3.setEnabled(true);}
 		
 	}
 	

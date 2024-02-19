@@ -41,10 +41,11 @@ public class ServidorTCP {
 
 		try {
 			// Esperamos a que alguien se conecte a nuestroSocket
+			Socket socketDelCliente1 = socketDelServidor.accept();
+			Socket socketDelCliente2 = socketDelServidor.accept();
 			
 			while (jugando && turno <= 9) {
-				Socket socketDelCliente1 = socketDelServidor.accept();
-				Socket socketDelCliente2 = socketDelServidor.accept();
+				
 				System.out.println("Clientes conectados");
 				ArrayList<BotonCliente> arrayBotones;
 				if (turno == 0) {
@@ -55,6 +56,11 @@ public class ServidorTCP {
 
 					DataOutputStream dos2 = new DataOutputStream(socketDelCliente2.getOutputStream());
 					dos2.writeBoolean(false);
+					
+					
+					dos1.close();
+					dos2.close();
+					
 					turno++;
 				} else {
 					System.out.println("Turno: "+turno);
@@ -66,10 +72,14 @@ public class ServidorTCP {
 							// Se ha ganado
 							System.out.println("Se ha ganado el jugador 1");
 							jugando = false;
-							ObjectOutputStream oos2 = new ObjectOutputStream(socketDelCliente2.getOutputStream());
-							oos2.writeObject(arrayBotones);
+							
 							// Se tendrá que enviar los resultados de la partida a los jugadores
 						}
+						ObjectOutputStream oos = new ObjectOutputStream(socketDelCliente2.getOutputStream());
+						oos.writeObject(arrayBotones);
+						
+						//ois.close();
+						//oos.close();
 						
 					} else {
 						System.out.println("Turno del jugador 2!");
@@ -85,15 +95,15 @@ public class ServidorTCP {
 					}
 					turno++;
 					
-					
-					
 					arrayBotones.clear();
-					socketDelCliente1.close();
-					socketDelCliente2.close();
+					
+					
 
 				}
 				
 			}
+			socketDelCliente1.close();
+			socketDelCliente2.close();
 
 			// Tirar la moneda y enviar la información de quién empieza
 
