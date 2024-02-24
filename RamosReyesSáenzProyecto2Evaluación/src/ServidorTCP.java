@@ -10,7 +10,6 @@ import java.util.concurrent.Executors;
 public class ServidorTCP {
 
 	public static DataInputStream disJugador1, disJugador2;
-
 	public static void main(String[] args) {
 
 		Integer turno = 0;
@@ -33,18 +32,20 @@ public class ServidorTCP {
 
 			System.out.println("Tic Tac Toe Server is Running...");
 			var pool = Executors.newFixedThreadPool(200);
+			Juego juego = new Juego();
 
 			Socket socketDelCliente1 = socketDelServidor.accept();
 			disJugador1 = new DataInputStream(socketDelCliente1.getInputStream());
 			String nombreJugador1 = disJugador1.readUTF();
+			pool.execute(juego.new Jugador(nombreJugador1, socketDelCliente1, 'X'));
 
 			Socket socketDelCliente2 = socketDelServidor.accept();
 			disJugador2 = new DataInputStream(socketDelCliente2.getInputStream());
 			String nombreJugador2 = disJugador2.readUTF();
-
-			Juego juego = new Juego();
-			pool.execute(juego.new Jugador(nombreJugador1, socketDelCliente1, 'X'));
 			pool.execute(juego.new Jugador(nombreJugador2, socketDelCliente2, 'O'));
+
+
+			System.out.println("Se han creado los jugadores correctamente. ");
 
 		} catch (IOException ioe) {
 			System.err.println("Error al abrir el socket de servidor : " + ioe);
@@ -57,7 +58,7 @@ public class ServidorTCP {
 class Juego {
 	// Se inicializa el tablero
 	static Jugador[] tablero = new Jugador[9];
-
+	public static Boolean jugando = true;
 	static Jugador jugadorActivo;
 
 	public static boolean seHaGanado(Jugador[] tablero) {
@@ -80,7 +81,7 @@ class Juego {
 			throw new IllegalStateException("No es tu turno. ");
 		} else if (jugador.oponente == null) {
 			throw new IllegalStateException("No tienes oponente");
-		} else if(tablero[posicion] != null) {
+		} else if (tablero[posicion] != null) {
 			throw new IllegalStateException("Celda ocupada");
 		}
 	}
@@ -90,7 +91,7 @@ class Juego {
 
 		public static DataInputStream dis;
 		public static DataOutputStream dos;
-		public static DataOutputStream dosJugadorActivo, dosOponente;
+		public static DataOutputStream dosOponente;
 
 		String nombreJugador;
 		Jugador oponente;
@@ -137,62 +138,69 @@ class Juego {
 
 		@Override
 		public void run() {
-			System.out.println("Hola, soy el jugador " + nombreJugador + "desde el metodo run()");
 			try {
 				dis = new DataInputStream(socketDelCliente.getInputStream());
 				dos = new DataOutputStream(socketDelCliente.getOutputStream());
 
 				// 1. Asignar el jugador activo y el oponente
+
 				if (this.simbolo == 'X') {
 					jugadorActivo = this;
 				} else {
-					if(this.getOponente()==null) {
+					if (this.getOponente() == null) {
 						oponente = jugadorActivo;
-						oponente.setOponente(this);	
+						oponente.oponente = this;
 					}
 				}
+
+				/*
+				 * if(this.simbolo == 'X') { jugadorActivo = this;
+				 * 
+				 * }else if (this.simbolo == 'O') { oponente = jugadorActivo;
+				 * jugadorActivo.oponente = this; }
+				 */
 
 				// 2. Envio de la marca al cliente, los dos jugadores mandan su marca a su
 				// resoectivo cliente
 
 				dos.writeUTF("1" + this.simbolo);
 				// 1 + dato: estamos recibiendo el simbolo para asignarselo al cliente
-			
 
 				// El jugador va a estar a la escucha de la posicion clickada por el cliente
 				// [enviarInfo()]
-				while (true) {
+				while (jugando) {
 					try {
+						System.out.println("LLEGA HASTA AQUÍ");
+						int posicion = dis.readInt(); // AQUÍ DEBE ESPERAR A QUE EL CLIENTE PRESIONE UN BOTÓN
 
-						int posicion = dis.readInt();
-						
-						// chequear lo jugada 
+						// chequear lo jugada
 						checkJugada(posicion, this);
-						
+
 						// Actualizar el tablero
 						tablero[posicion] = this;
-						
+
 						// Se cambian los roles
 						jugadorActivo = this.oponente;
 
 						// Se envía la posicion al oponente
-						dosOponente.writeUTF("4"+posicion);
-						
+						dosOponente.writeUTF("4" + posicion);
+
 						// Se manda el resultado al oponente
 						if (seHaGanado(tablero)) {
 							// Enviar información al jugadorActivo
-							dosJugadorActivo.writeUTF("2Has ganado, " + this.getNombreJugador());
+							dos.writeUTF("2Has ganado, " + this.getNombreJugador());
 
 							// Enviar información al oponente
 							dosOponente.writeUTF("2Has ganado, " + oponente.getNombreJugador());
 
+							jugando = false;
 							// logDePartidas();
 						}
-						
+
 					} catch (IOException e) {
 						e.printStackTrace();
 					} catch (IllegalStateException e) {
-						dos.writeUTF("3"+e.getMessage());
+						dos.writeUTF("3" + e.getMessage());
 					}
 				}
 			} catch (IOException e1) {
