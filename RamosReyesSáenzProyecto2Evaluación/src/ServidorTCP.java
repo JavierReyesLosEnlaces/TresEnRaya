@@ -146,13 +146,14 @@ class Juego {
 
 				if (this.simbolo == 'X') {
 					jugadorActivo = this;
-				} else {
+				}else {
 					if (this.getOponente() == null) {
 						oponente = jugadorActivo;
 						oponente.oponente = this;
+						dosOponente = new DataOutputStream(oponente.getSocketDelCliente().getOutputStream());
 					}
 				}
-
+	
 				/*
 				 * if(this.simbolo == 'X') { jugadorActivo = this;
 				 * 

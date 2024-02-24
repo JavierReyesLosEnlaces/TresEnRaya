@@ -53,8 +53,6 @@ public class Cliente_view {
 	private static JButton[] arraybotones = new JButton[9];
 
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
 				// 1. SE INICIA LA INTERFAZ
 				try {
 					window = new Cliente_view();
@@ -149,7 +147,7 @@ public class Cliente_view {
 
 			}
 
-			private void deseleccionBoton() {
+			private static void deseleccionBoton() {
 				for (int i = 0; i < arraybotones.length; i++) {
 					if (arraybotones[i].getName().equals(nombreBotonMemoria)) {
 						arraybotones[i].setEnabled(true);
@@ -159,7 +157,7 @@ public class Cliente_view {
 
 			}
 
-			private void actualizarBoton(String mensajeFinal) {
+			private static void actualizarBoton(String mensajeFinal) {
 
 				switch (Integer.parseInt(mensajeFinal)) {
 				case 0:
@@ -201,8 +199,8 @@ public class Cliente_view {
 				}
 
 			}
-		});
-	}
+		
+	
 
 	/**
 	 * Create the application.
