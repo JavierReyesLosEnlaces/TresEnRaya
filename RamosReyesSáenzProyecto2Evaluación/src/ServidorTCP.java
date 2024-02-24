@@ -7,15 +7,19 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class ServidorTCP {
 
+	public static DataInputStream disJugador1, disJugador2;
 	public static void main(String[] args) {
 
 		Integer turno = 0;
 		Boolean jugando = true, jugador;
+		Jugador [] tablero;
+		
 
 		// FASE INICIAL
 		// Primero indicamos la dirección IP local
@@ -30,224 +34,196 @@ public class ServidorTCP {
 
 		try {
 			// Se crea el socket servidor y se limita las conexiones a dos
-			socketDelServidor = new ServerSocket(40000);
+			socketDelServidor = new ServerSocket(40000,2);
 			System.out.println("Esperando a que se conecten los usuarios...");
 		} catch (IOException ioe) {
 			System.err.println("Error al abrir el socket de servidor : " + ioe);
 			System.exit(-1);
 		}
 
-		// FASE DE JUEGO
-
 		try {
-			// Esperamos a que alguien se conecte a nuestroSocket
-			Socket socketDelCliente1 = socketDelServidor.accept();
-			Socket socketDelCliente2 = socketDelServidor.accept();
+			// Se inicializa el tablero 
+			tablero = new Jugador[9];
 			
+			// Cuando un cliente se conecta, aparece una ventana que pide su nombre de usuario
+			// El cliente introduce un nombre, le da a ENTER y ENTONCES SE INTENTAN CONECTAR AL SERVIDOR
+			
+			Socket socketDelCliente1 = socketDelServidor.accept();
+			disJugador1 = new DataInputStream(socketDelCliente1.getInputStream());
+			String nombreJugador1 = disJugador1.readUTF();
+			Jugador jugador1 = new Jugador (nombreJugador1, socketDelCliente1, 'X');
+			System.out.println("Se ha creado el usuario "+nombreJugador1);
+
+			Socket socketDelCliente2 = socketDelServidor.accept();
+			disJugador2 = new DataInputStream(socketDelCliente2.getInputStream());
+			String nombreJugador2 = disJugador2.readUTF();
+			Jugador jugador2 = new Jugador (nombreJugador2, socketDelCliente2, 'O');
+			System.out.println("Se ha creado el usuario "+nombreJugador2);
+			
+			//while (jugando && turno <= 9) {
+			
+			int numJ1 = disJugador1.readInt();
+			int numJ2 = disJugador2.readInt();
+			
+			while (jugando && turno <= 9) {
+				/*
+	            while (input.hasNextLine()) {
+	                var command = input.nextLine();
+	                if (command.startsWith("QUIT")) {
+	                    return;
+	                } else if (command.startsWith("MOVE")) {
+	                    processMoveCommand(Integer.parseInt(command.substring(5)));
+	                }
+	            }
+	            */
+				
+				
+				if(turno%2!=0) {
+					// Un jugador manda la información de qué se ha posicionado en una cuadro del tablero
+					int posJugador1 = disJugador1.readInt();					
+					// Por cada turno se modifica el tablero
+					tablero [posJugador1] = jugador1;
+				}else {
+					int posJugador2 = disJugador2.readInt();
+					tablero [posJugador2] = jugador2;
+				}
+				
+				// Por cada turno se comprueba el tablero
+				seHaGanado(tablero);
+				
+				// Por cada turno se envian los datos del tablero
+				
+				String codigoTablero = cifrarTablero(tablero);
+				
+				turno ++;
+			}
+			
+			
+			
+			/*
 			while (jugando && turno <= 9) {
 				
 				System.out.println("Clientes conectados");
+				
 				ArrayList<BotonCliente> arrayBotones;
-				if (turno == 0) {
-					System.out.println("turno 0");
-					// Asignación de booleanos
-					DataOutputStream dos1 = new DataOutputStream(socketDelCliente1.getOutputStream());
-					dos1.writeBoolean(true);
-
-					DataOutputStream dos2 = new DataOutputStream(socketDelCliente2.getOutputStream());
-					dos2.writeBoolean(false);
-					
-					
-					dos1.close();
-					dos2.close();
-					
-					turno++;
-				} else {
-					System.out.println("Turno: "+turno);
-					if (turno % 2 != 0) {
-						System.out.println("Turno del jugador 1!");
-						ObjectInputStream ois = new ObjectInputStream(socketDelCliente1.getInputStream());
-						arrayBotones = (ArrayList<BotonCliente>) ois.readObject();
-						if (comprobarVictoria(arrayBotones)) {
-							// Se ha ganado
-							System.out.println("Se ha ganado el jugador 1");
-							jugando = false;
 							
-							// Se tendrá que enviar los resultados de la partida a los jugadores
-						}
-						ObjectOutputStream oos = new ObjectOutputStream(socketDelCliente2.getOutputStream());
-						oos.writeObject(arrayBotones);
+				System.out.println("Turno: "+turno);
+				if (turno % 2 != 0) {
+					System.out.println("Turno del jugador 1!");
+					ObjectInputStream ois = new ObjectInputStream(socketDelCliente1.getInputStream());
+					arrayBotones = (ArrayList<BotonCliente>) ois.readObject();
+					if (comprobarVictoria(arrayBotones)) {
+						// Se ha ganado
+						System.out.println("Se ha ganado el jugador 1");
+						jugando = false;
 						
-						//ois.close();
-						//oos.close();
-						
-					} else {
-						System.out.println("Turno del jugador 2!");
-						ObjectInputStream ois2 = new ObjectInputStream(socketDelCliente2.getInputStream());
-						arrayBotones = (ArrayList<BotonCliente>) ois2.readObject();
-						if (comprobarVictoria(arrayBotones)) {
-							System.out.println("Se ha ganado el jugador 2");
-							jugando = false;
-						}
-						ObjectOutputStream oos1 = new ObjectOutputStream(socketDelCliente1.getOutputStream());
-						oos1.writeObject(arrayBotones);
-						
+						// Se tendrá que enviar los resultados de la partida a los jugadores
 					}
-					turno++;
+					ObjectOutputStream oos = new ObjectOutputStream(socketDelCliente2.getOutputStream());
+					oos.writeObject(arrayBotones);
 					
-					arrayBotones.clear();
+					//ois.close();
+					//oos.close();
 					
+				} else {
+					System.out.println("Turno del jugador 2!");
+					ObjectInputStream ois2 = new ObjectInputStream(socketDelCliente2.getInputStream());
+					arrayBotones = (ArrayList<BotonCliente>) ois2.readObject();
+					if (comprobarVictoria(arrayBotones)) {
+						System.out.println("Se ha ganado el jugador 2");
+						jugando = false;
+					}
+					ObjectOutputStream oos1 = new ObjectOutputStream(socketDelCliente1.getOutputStream());
+					oos1.writeObject(arrayBotones);
 					
-
 				}
+				turno++;
+				
+				arrayBotones.clear();									
+				
+				
+
+				ObjectInputStream ois = new ObjectInputStream(socketDelCliente1.getInputStream());
+				System.out.println(" El servidor ha recibido el objeto: "+ois.readObject().toString());
+				
 				
 			}
-			socketDelCliente1.close();
-			socketDelCliente2.close();
-
-			// Tirar la moneda y enviar la información de quién empieza
-
-			// * El otro cliente recibe los objetos BotonCliente
-			// que contienen el bstate y el símbolo
-			// en sus propio tablero tiene que setear lo siguiente: los viejos los cambia
-			// por los nuevos
-			// los que tengan el bstate = true --> deshabilitar el botón
-			// los que tengan el simbolo "X" los pone a "X"
-			// los que tengan el símbolo "O" los pone a "O"
-
-			// recibe información de los 9 bstates y también +1 a la fase
-
-			// comprobar información
-			// comprobarVictoria();
-
-			// cargar información y la fase al otro
-
-		} catch (IOException | ClassNotFoundException e) {
-			e.printStackTrace();
+			*/
+		} catch (IOException e) {
+			System.out.println("No se ha conseguido establecer la conexion con los jugadores. ");		
 		}
 
-	}
-
-	private static Boolean comprobarVictoria(ArrayList<BotonCliente> botones) {		
-		int numeroCasos = 0;
-		boolean[] casosVictoria = {
-				// X verticales
-				(
-					    (botones.get(0).getBstate() && botones.get(0).getSimbolo().equals("X")) && 
-					    (botones.get(1).getBstate() && botones.get(1).getSimbolo().equals("X")) && 
-					    (botones.get(2).getBstate() && botones.get(2).getSimbolo().equals("X"))
-					),
-					(
-					    (botones.get(3).getBstate() && botones.get(3).getSimbolo().equals("X")) && 
-					    (botones.get(4).getBstate() && botones.get(4).getSimbolo().equals("X")) && 
-					    (botones.get(5).getBstate() && botones.get(5).getSimbolo().equals("X"))
-					),
-					(
-					    (botones.get(6).getBstate() && botones.get(6).getSimbolo().equals("X")) && 
-					    (botones.get(7).getBstate() && botones.get(7).getSimbolo().equals("X")) && 
-					    (botones.get(8).getBstate() && botones.get(8).getSimbolo().equals("X"))
-					),
-
-				// X horizontales
-					(
-						    (botones.get(0).getBstate() && botones.get(0).getSimbolo().equals("X")) && 
-						    (botones.get(3).getBstate() && botones.get(3).getSimbolo().equals("X")) &&
-						    (botones.get(6).getBstate() && botones.get(6).getSimbolo().equals("X"))
-					),
-					(
-						    (botones.get(1).getBstate() && botones.get(1).getSimbolo().equals("X")) && 
-						    (botones.get(4).getBstate() && botones.get(4).getSimbolo().equals("X")) && 
-						    (botones.get(7).getBstate() && botones.get(7).getSimbolo().equals("X")) 
-					),
-					(
-						    (botones.get(2).getBstate() && botones.get(2).getSimbolo().equals("X")) && 
-							(botones.get(5).getBstate() && botones.get(5).getSimbolo().equals("X")) && 
-							(botones.get(8).getBstate() && botones.get(8).getSimbolo().equals("X"))
-					),
-
-				// X oblicuos
-					(
-						    (botones.get(0).getBstate() && botones.get(0).getSimbolo().equals("X")) && 
-						    (botones.get(4).getBstate() && botones.get(4).getSimbolo().equals("X")) && 
-						    (botones.get(8).getBstate() && botones.get(8).getSimbolo().equals("X"))  
-					),
-					(
-						    (botones.get(6).getBstate() && botones.get(6).getSimbolo().equals("X")) && 
-						    (botones.get(4).getBstate() && botones.get(4).getSimbolo().equals("X")) && 
-						    (botones.get(2).getBstate() && botones.get(2).getSimbolo().equals("X"))  
-					),
-
-				// O verticales
-					(
-					    (botones.get(0).getBstate() && botones.get(0).getSimbolo().equals("O")) && 
-					    (botones.get(1).getBstate() && botones.get(1).getSimbolo().equals("O")) && 
-					    (botones.get(2).getBstate() && botones.get(2).getSimbolo().equals("O"))
-					),
-					(
-					    (botones.get(3).getBstate() && botones.get(3).getSimbolo().equals("O")) && 
-					    (botones.get(4).getBstate() && botones.get(4).getSimbolo().equals("O")) && 
-					    (botones.get(5).getBstate() && botones.get(5).getSimbolo().equals("O"))
-					),
-					(
-					    (botones.get(6).getBstate() && botones.get(6).getSimbolo().equals("O")) && 
-					    (botones.get(7).getBstate() && botones.get(7).getSimbolo().equals("O")) && 
-					    (botones.get(8).getBstate() && botones.get(8).getSimbolo().equals("O"))
-					),
-
-				// O horizontales
-					(
-					    (botones.get(0).getBstate() && botones.get(0).getSimbolo().equals("O")) && 
-					    (botones.get(3).getBstate() && botones.get(3).getSimbolo().equals("O")) &&
-					    (botones.get(6).getBstate() && botones.get(6).getSimbolo().equals("O"))
-					),
-					(
-					    (botones.get(1).getBstate() && botones.get(1).getSimbolo().equals("O")) && 
-					    (botones.get(4).getBstate() && botones.get(4).getSimbolo().equals("O")) && 
-					    (botones.get(7).getBstate() && botones.get(7).getSimbolo().equals("O")) 
-					),
-					(
-					    (botones.get(2).getBstate() && botones.get(2).getSimbolo().equals("O")) && 
-					    (botones.get(5).getBstate() && botones.get(5).getSimbolo().equals("O")) && 
-					    (botones.get(8).getBstate() && botones.get(8).getSimbolo().equals("O"))
-					),
-
-				// O oblicuos
-					(
-					    (botones.get(0).getBstate() && botones.get(0).getSimbolo().equals("O")) && 
-					    (botones.get(4).getBstate() && botones.get(4).getSimbolo().equals("O")) && 
-					    (botones.get(8).getBstate() && botones.get(8).getSimbolo().equals("O"))  
-					),
-					(
-					    (botones.get(6).getBstate() && botones.get(6).getSimbolo().equals("O")) && 
-					    (botones.get(4).getBstate() && botones.get(4).getSimbolo().equals("O")) && 
-					    (botones.get(2).getBstate() && botones.get(2).getSimbolo().equals("O"))  
-					)
-		};
-		
-		for (int i = 0; i < casosVictoria.length; i++) {
-			if (casosVictoria[i]) {
-				numeroCasos+=1;
-			} 
-		}
-		
-		if(numeroCasos>=1) {
-			return true;
-		}else return false;
 	}
 	
-	// BORRAR?
-	private static void initJuego(boolean[][] juego, boolean jugando) {
-		jugando = true;
+	
 
-		juego[0][0] = false;
-		juego[0][1] = false;
-		juego[0][2] = false;
-		juego[1][0] = false;
-		juego[1][1] = false;
-		juego[1][2] = false;
-		juego[2][0] = false;
-		juego[2][1] = false;
-		juego[2][2] = false;
+    private static String cifrarTablero(ServidorTCP.Jugador[] tablero) {
+    	String codigoTablero = "";
+		for(Jugador j : tablero) {
+			if(j == null) {
+				
+			}
+		}
+		
+		return null;
 	}
+
+
+
+	public static boolean seHaGanado(Jugador[] tablero) {
+        return (tablero[0] != null && tablero[0] == tablero[1] && tablero[0] == tablero[2])
+                || (tablero[3] != null && tablero[3] == tablero[4] && tablero[3] == tablero[5])
+                || (tablero[6] != null && tablero[6] == tablero[7] && tablero[6] == tablero[8])
+                || (tablero[0] != null && tablero[0] == tablero[3] && tablero[0] == tablero[6])
+                || (tablero[1] != null && tablero[1] == tablero[4] && tablero[1] == tablero[7])
+                || (tablero[2] != null && tablero[2] == tablero[5] && tablero[2] == tablero[8])
+                || (tablero[0] != null && tablero[0] == tablero[4] && tablero[0] == tablero[8])
+                || (tablero[2] != null && tablero[2] == tablero[4] && tablero[2] == tablero[6]);
+    }
+	
+
+// CLASE JUGADOR
+static class Jugador implements Runnable{
+	
+	String nombreJugador;
+	Socket socketDelCliente;
+	char simbolo;
+	
+	public Jugador(String nombreJugador, Socket socketDelCliente, char simbolo) {
+		this.nombreJugador = nombreJugador;
+		this.socketDelCliente = socketDelCliente;
+		this.simbolo = simbolo;
+	}
+
+	public String getNombreJugador() {
+		return nombreJugador;
+	}
+
+	public void setNombreJugador(String nombreJugador) {
+		this.nombreJugador = nombreJugador;
+	}
+
+	public Socket getSocketDelCliente() {
+		return socketDelCliente;
+	}
+
+	public void setSocketDelCliente(Socket socketDelCliente) {
+		this.socketDelCliente = socketDelCliente;
+	}
+
+	public char getSimbolo() {
+		return simbolo;
+	}
+
+	public void setSimbolo(char simbolo) {
+		this.simbolo = simbolo;
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Hola, soy el jugador "+nombreJugador + "desde el metodo run()");
+		
+	}		
+}
 
 }

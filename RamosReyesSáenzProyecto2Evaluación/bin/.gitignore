@@ -1,17 +1,5 @@
-/BotonCliente.class
-/Cliente1_view$1.class
-/Cliente1_view$10.class
-/Cliente1_view$2.class
-/Cliente1_view$3.class
-/Cliente1_view$4.class
-/Cliente1_view$5.class
-/Cliente1_view$6.class
-/Cliente1_view$7.class
-/Cliente1_view$8.class
-/Cliente1_view$9.class
-/Cliente1_view.class
-/Cliente.class
-/Cliente1.class
+/Jugador.class
+/ServidorTCP$Jugador.class
 /Cliente_view$1.class
 /Cliente_view$10.class
 /Cliente_view$2.class
@@ -22,4 +10,3 @@
 /Cliente_view$7.class
 /Cliente_view$8.class
 /Cliente_view$9.class
-/Cliente_view.class
