@@ -1,25 +1,20 @@
-import java.awt.Button;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.concurrent.Executors;
 
 public class ServidorTCP {
 
 	public static DataInputStream disJugador1, disJugador2;
+
 	public static void main(String[] args) {
 
 		Integer turno = 0;
 		Boolean jugando = true, jugador;
-		Jugador [] tablero;
-		
 
 		// FASE INICIAL
 		// Primero indicamos la dirección IP local
@@ -30,200 +25,180 @@ public class ServidorTCP {
 		}
 
 		// Abrimos un "Socket de Servidor" TCP en el puerto 1234.
-		ServerSocket socketDelServidor = null;
 
-		try {
+		try (ServerSocket socketDelServidor = new ServerSocket(40000, 2)) {
 			// Se crea el socket servidor y se limita las conexiones a dos
-			socketDelServidor = new ServerSocket(40000,2);
-			System.out.println("Esperando a que se conecten los usuarios...");
-		} catch (IOException ioe) {
-			System.err.println("Error al abrir el socket de servidor : " + ioe);
-			System.exit(-1);
-		}
 
-		try {
-			// Se inicializa el tablero 
-			tablero = new Jugador[9];
-			
-			// Cuando un cliente se conecta, aparece una ventana que pide su nombre de usuario
-			// El cliente introduce un nombre, le da a ENTER y ENTONCES SE INTENTAN CONECTAR AL SERVIDOR
-			
+			System.out.println("Esperando a que se conecten los usuarios...");
+
+			System.out.println("Tic Tac Toe Server is Running...");
+			var pool = Executors.newFixedThreadPool(200);
+
 			Socket socketDelCliente1 = socketDelServidor.accept();
 			disJugador1 = new DataInputStream(socketDelCliente1.getInputStream());
 			String nombreJugador1 = disJugador1.readUTF();
-			Jugador jugador1 = new Jugador (nombreJugador1, socketDelCliente1, 'X');
-			System.out.println("Se ha creado el usuario "+nombreJugador1);
 
 			Socket socketDelCliente2 = socketDelServidor.accept();
 			disJugador2 = new DataInputStream(socketDelCliente2.getInputStream());
 			String nombreJugador2 = disJugador2.readUTF();
-			Jugador jugador2 = new Jugador (nombreJugador2, socketDelCliente2, 'O');
-			System.out.println("Se ha creado el usuario "+nombreJugador2);
-			
-			//while (jugando && turno <= 9) {
-			
-			int numJ1 = disJugador1.readInt();
-			int numJ2 = disJugador2.readInt();
-			
-			while (jugando && turno <= 9) {
-				/*
-	            while (input.hasNextLine()) {
-	                var command = input.nextLine();
-	                if (command.startsWith("QUIT")) {
-	                    return;
-	                } else if (command.startsWith("MOVE")) {
-	                    processMoveCommand(Integer.parseInt(command.substring(5)));
-	                }
-	            }
-	            */
-				
-				
-				if(turno%2!=0) {
-					// Un jugador manda la información de qué se ha posicionado en una cuadro del tablero
-					int posJugador1 = disJugador1.readInt();					
-					// Por cada turno se modifica el tablero
-					tablero [posJugador1] = jugador1;
-				}else {
-					int posJugador2 = disJugador2.readInt();
-					tablero [posJugador2] = jugador2;
-				}
-				
-				// Por cada turno se comprueba el tablero
-				seHaGanado(tablero);
-				
-				// Por cada turno se envian los datos del tablero
-				
-				String codigoTablero = cifrarTablero(tablero);
-				
-				turno ++;
-			}
-			
-			
-			
-			/*
-			while (jugando && turno <= 9) {
-				
-				System.out.println("Clientes conectados");
-				
-				ArrayList<BotonCliente> arrayBotones;
-							
-				System.out.println("Turno: "+turno);
-				if (turno % 2 != 0) {
-					System.out.println("Turno del jugador 1!");
-					ObjectInputStream ois = new ObjectInputStream(socketDelCliente1.getInputStream());
-					arrayBotones = (ArrayList<BotonCliente>) ois.readObject();
-					if (comprobarVictoria(arrayBotones)) {
-						// Se ha ganado
-						System.out.println("Se ha ganado el jugador 1");
-						jugando = false;
-						
-						// Se tendrá que enviar los resultados de la partida a los jugadores
-					}
-					ObjectOutputStream oos = new ObjectOutputStream(socketDelCliente2.getOutputStream());
-					oos.writeObject(arrayBotones);
-					
-					//ois.close();
-					//oos.close();
-					
-				} else {
-					System.out.println("Turno del jugador 2!");
-					ObjectInputStream ois2 = new ObjectInputStream(socketDelCliente2.getInputStream());
-					arrayBotones = (ArrayList<BotonCliente>) ois2.readObject();
-					if (comprobarVictoria(arrayBotones)) {
-						System.out.println("Se ha ganado el jugador 2");
-						jugando = false;
-					}
-					ObjectOutputStream oos1 = new ObjectOutputStream(socketDelCliente1.getOutputStream());
-					oos1.writeObject(arrayBotones);
-					
-				}
-				turno++;
-				
-				arrayBotones.clear();									
-				
-				
 
-				ObjectInputStream ois = new ObjectInputStream(socketDelCliente1.getInputStream());
-				System.out.println(" El servidor ha recibido el objeto: "+ois.readObject().toString());
-				
-				
-			}
-			*/
-		} catch (IOException e) {
-			System.out.println("No se ha conseguido establecer la conexion con los jugadores. ");		
+			Juego juego = new Juego();
+			pool.execute(juego.new Jugador(nombreJugador1, socketDelCliente1, 'X'));
+			pool.execute(juego.new Jugador(nombreJugador2, socketDelCliente2, 'O'));
+
+		} catch (IOException ioe) {
+			System.err.println("Error al abrir el socket de servidor : " + ioe);
+			System.exit(-1);
 		}
-
 	}
-	
-	
+}
 
-    private static String cifrarTablero(ServidorTCP.Jugador[] tablero) {
-    	String codigoTablero = "";
-		for(Jugador j : tablero) {
-			if(j == null) {
-				
-			}
-		}
-		
-		return null;
-	}
+// CLASE JUEGO
+class Juego {
+	// Se inicializa el tablero
+	static Jugador[] tablero = new Jugador[9];
 
-
+	static Jugador jugadorActivo;
 
 	public static boolean seHaGanado(Jugador[] tablero) {
-        return (tablero[0] != null && tablero[0] == tablero[1] && tablero[0] == tablero[2])
-                || (tablero[3] != null && tablero[3] == tablero[4] && tablero[3] == tablero[5])
-                || (tablero[6] != null && tablero[6] == tablero[7] && tablero[6] == tablero[8])
-                || (tablero[0] != null && tablero[0] == tablero[3] && tablero[0] == tablero[6])
-                || (tablero[1] != null && tablero[1] == tablero[4] && tablero[1] == tablero[7])
-                || (tablero[2] != null && tablero[2] == tablero[5] && tablero[2] == tablero[8])
-                || (tablero[0] != null && tablero[0] == tablero[4] && tablero[0] == tablero[8])
-                || (tablero[2] != null && tablero[2] == tablero[4] && tablero[2] == tablero[6]);
-    }
-	
-
-// CLASE JUGADOR
-static class Jugador implements Runnable{
-	
-	String nombreJugador;
-	Socket socketDelCliente;
-	char simbolo;
-	
-	public Jugador(String nombreJugador, Socket socketDelCliente, char simbolo) {
-		this.nombreJugador = nombreJugador;
-		this.socketDelCliente = socketDelCliente;
-		this.simbolo = simbolo;
+		return (tablero[0] != null && tablero[0] == tablero[1] && tablero[0] == tablero[2])
+				|| (tablero[3] != null && tablero[3] == tablero[4] && tablero[3] == tablero[5])
+				|| (tablero[6] != null && tablero[6] == tablero[7] && tablero[6] == tablero[8])
+				|| (tablero[0] != null && tablero[0] == tablero[3] && tablero[0] == tablero[6])
+				|| (tablero[1] != null && tablero[1] == tablero[4] && tablero[1] == tablero[7])
+				|| (tablero[2] != null && tablero[2] == tablero[5] && tablero[2] == tablero[8])
+				|| (tablero[0] != null && tablero[0] == tablero[4] && tablero[0] == tablero[8])
+				|| (tablero[2] != null && tablero[2] == tablero[4] && tablero[2] == tablero[6]);
 	}
 
-	public String getNombreJugador() {
-		return nombreJugador;
+	public static void logDePartidas() {
+
 	}
 
-	public void setNombreJugador(String nombreJugador) {
-		this.nombreJugador = nombreJugador;
+	public static void checkJugada(int posicion, Jugador jugador) {
+		if (jugador != jugadorActivo) {
+			throw new IllegalStateException("No es tu turno. ");
+		} else if (jugador.oponente == null) {
+			throw new IllegalStateException("No tienes oponente");
+		} else if(tablero[posicion] != null) {
+			throw new IllegalStateException("Celda ocupada");
+		}
 	}
 
-	public Socket getSocketDelCliente() {
-		return socketDelCliente;
-	}
+	// CLASE JUGADOR
+	class Jugador implements Runnable {
 
-	public void setSocketDelCliente(Socket socketDelCliente) {
-		this.socketDelCliente = socketDelCliente;
-	}
+		public static DataInputStream dis;
+		public static DataOutputStream dos;
+		public static DataOutputStream dosJugadorActivo, dosOponente;
 
-	public char getSimbolo() {
-		return simbolo;
-	}
+		String nombreJugador;
+		Jugador oponente;
+		Socket socketDelCliente;
+		char simbolo;
 
-	public void setSimbolo(char simbolo) {
-		this.simbolo = simbolo;
-	}
+		public Jugador(String nombreJugador, Socket socketDelCliente, char simbolo) {
+			this.nombreJugador = nombreJugador;
+			this.socketDelCliente = socketDelCliente;
+			this.simbolo = simbolo;
+		}
 
-	@Override
-	public void run() {
-		System.out.println("Hola, soy el jugador "+nombreJugador + "desde el metodo run()");
-		
-	}		
-}
+		public String getNombreJugador() {
+			return nombreJugador;
+		}
+
+		public void setNombreJugador(String nombreJugador) {
+			this.nombreJugador = nombreJugador;
+		}
+
+		public Socket getSocketDelCliente() {
+			return socketDelCliente;
+		}
+
+		public void setSocketDelCliente(Socket socketDelCliente) {
+			this.socketDelCliente = socketDelCliente;
+		}
+
+		public char getSimbolo() {
+			return simbolo;
+		}
+
+		public void setSimbolo(char simbolo) {
+			this.simbolo = simbolo;
+		}
+
+		public Jugador getOponente() {
+			return oponente;
+		}
+
+		public void setOponente(Jugador oponente) {
+			this.oponente = oponente;
+		}
+
+		@Override
+		public void run() {
+			System.out.println("Hola, soy el jugador " + nombreJugador + "desde el metodo run()");
+			try {
+				dis = new DataInputStream(socketDelCliente.getInputStream());
+				dos = new DataOutputStream(socketDelCliente.getOutputStream());
+
+				// 1. Asignar el jugador activo y el oponente
+				if (this.simbolo == 'X') {
+					jugadorActivo = this;
+				} else {
+					if(this.getOponente()==null) {
+						oponente = jugadorActivo;
+						oponente.setOponente(this);	
+					}
+				}
+
+				// 2. Envio de la marca al cliente, los dos jugadores mandan su marca a su
+				// resoectivo cliente
+
+				dos.writeUTF("1" + this.simbolo);
+				// 1 + dato: estamos recibiendo el simbolo para asignarselo al cliente
+			
+
+				// El jugador va a estar a la escucha de la posicion clickada por el cliente
+				// [enviarInfo()]
+				while (true) {
+					try {
+
+						int posicion = dis.readInt();
+						
+						// chequear lo jugada 
+						checkJugada(posicion, this);
+						
+						// Actualizar el tablero
+						tablero[posicion] = this;
+						
+						// Se cambian los roles
+						jugadorActivo = this.oponente;
+
+						// Se envía la posicion al oponente
+						dosOponente.writeUTF("4"+posicion);
+						
+						// Se manda el resultado al oponente
+						if (seHaGanado(tablero)) {
+							// Enviar información al jugadorActivo
+							dosJugadorActivo.writeUTF("2Has ganado, " + this.getNombreJugador());
+
+							// Enviar información al oponente
+							dosOponente.writeUTF("2Has ganado, " + oponente.getNombreJugador());
+
+							// logDePartidas();
+						}
+						
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (IllegalStateException e) {
+						dos.writeUTF("3"+e.getMessage());
+					}
+				}
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
 
 }
