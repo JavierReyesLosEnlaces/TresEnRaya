@@ -128,23 +128,39 @@ public class Cliente_view {
 								valorSimboloOponente = "X";
 							}
 						} else if (input.startsWith("2")) {
-							mensajeFinal = input.replace("2", "");
+							mensajeFinal = input.substring(1);
 							JOptionPane.showMessageDialog(null, mensajeFinal);
+							break;
 						} else if (input.startsWith("3")) {
-							mensajeFinal = input.replace("3", "");
+							mensajeFinal = input.substring(1);
 							JOptionPane.showMessageDialog(null, mensajeFinal);
 							// DESSELECCIONAMOS EL BOTÓN ERRONEO
-							deseleccionBoton();
+							if(nombreBotonMemoria!=null) {
+								deseleccionBoton();
+							}
 
 						} else if (input.startsWith("4")) {
-							mensajeFinal = input.replace("4", "");
+							System.out.println(input);
+							mensajeFinal = input.substring(1);
 							actualizarBoton(mensajeFinal);
+						}else if(input.startsWith("5")) {
+							jugadaPermitida();
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				}
 
+			}
+
+			private static void jugadaPermitida() {
+				for (int i = 0; i < arraybotones.length; i++) {
+					if (arraybotones[i].getName().equals(nombreBotonMemoria)) {
+						arraybotones[i].setEnabled(false);
+						arraybotones[i].setText(valorSimbolo);
+					}
+				}
+				nombreBotonMemoria=null;
 			}
 
 			private static void deseleccionBoton() {
@@ -154,50 +170,16 @@ public class Cliente_view {
 						arraybotones[i].setText("");
 					}
 				}
-
+				nombreBotonMemoria=null;
 			}
 
 			private static void actualizarBoton(String mensajeFinal) {
-
-				switch (Integer.parseInt(mensajeFinal)) {
-				case 0:
-					btn_A1.setText(valorSimbolo);
-					btn_A1.setEnabled(false);
-					break;
-				case 1:
-					btn_A2.setText(valorSimbolo);
-					btn_A2.setEnabled(false);
-					break;
-				case 2:
-					btn_A3.setText(valorSimbolo);
-					btn_A3.setEnabled(false);
-					break;
-				case 3:
-					btn_B1.setText(valorSimbolo);
-					btn_B1.setEnabled(false);
-					break;
-				case 4:
-					btn_B2.setText(valorSimbolo);
-					btn_B2.setEnabled(false);
-					break;
-				case 5:
-					btn_B3.setText(valorSimbolo);
-					btn_B3.setEnabled(false);
-					break;
-				case 6:
-					btn_C1.setText(valorSimbolo);
-					btn_C1.setEnabled(false);
-					break;
-				case 7:
-					btn_C2.setText(valorSimbolo);
-					btn_C2.setEnabled(false);
-					break;
-				case 8:
-					btn_C3.setText(valorSimbolo);
-					btn_C3.setEnabled(false);
-					break;
-				}
-
+				for (int i = 0; i < arraybotones.length; i++) {
+					if(i==Integer.parseInt(mensajeFinal)) {
+						arraybotones[i].setText(valorSimboloOponente);
+						arraybotones[i].setEnabled(false);
+					}
+				}		
 			}
 		
 	
@@ -242,12 +224,10 @@ public class Cliente_view {
 		// Botones (A-C: columnas, numeros: filas)
 
 		btn_A1 = new JButton("");
+		btn_A1.setName("btn_A1");
 		btn_A1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_A1.setEnabled(false);
-				btn_A1.setText(valorSimbolo);
 				nombreBotonMemoria = btn_A1.getName();
-
 				enviarInfo(0);
 
 			}
@@ -258,12 +238,10 @@ public class Cliente_view {
 		arraybotones[0] = btn_A1;
 
 		btn_A2 = new JButton("");
+		btn_A2.setName("btn_A2");
 		btn_A2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_A2.setEnabled(false);
-				btn_A2.setText(valorSimbolo);
 				nombreBotonMemoria = btn_A2.getName();
-
 				enviarInfo(1);
 
 			}
@@ -273,10 +251,9 @@ public class Cliente_view {
 		arraybotones[1] = btn_A2;
 
 		btn_A3 = new JButton("");
+		btn_A3.setName("btn_A3");
 		btn_A3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_A3.setEnabled(false);
-				btn_A3.setText(valorSimbolo);
 				nombreBotonMemoria = btn_A3.getName();
 				enviarInfo(2);
 
@@ -287,10 +264,9 @@ public class Cliente_view {
 		arraybotones[2] = btn_A3;
 
 		btn_B1 = new JButton("");
+		btn_B1.setName("btn_B1");
 		btn_B1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_B1.setEnabled(false);
-				btn_B1.setText(valorSimbolo);
 				nombreBotonMemoria = btn_B1.getName();
 				enviarInfo(3);
 
@@ -301,10 +277,10 @@ public class Cliente_view {
 		arraybotones[3] = btn_B1;
 
 		btn_B2 = new JButton("");
+		btn_B2.setName("btn_B2");
 		btn_B2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_B2.setEnabled(false);
-				btn_B2.setText(valorSimbolo);
+
 				nombreBotonMemoria = btn_B2.getName();
 				enviarInfo(4);
 
@@ -315,10 +291,9 @@ public class Cliente_view {
 		arraybotones[4] = btn_B2;
 
 		btn_B3 = new JButton("");
+		btn_B3.setName("btn_B3");
 		btn_B3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_B3.setEnabled(false);
-				btn_B3.setText(valorSimbolo);
 				nombreBotonMemoria = btn_B3.getName();
 				enviarInfo(5);
 
@@ -329,10 +304,10 @@ public class Cliente_view {
 		arraybotones[5] = btn_B3;
 
 		btn_C1 = new JButton("");
+		btn_C1.setName("btn_C1");
 		btn_C1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_C1.setEnabled(false);
-				btn_C1.setText(valorSimbolo);
+
 				nombreBotonMemoria = btn_C1.getName();
 				enviarInfo(6);
 
@@ -343,10 +318,10 @@ public class Cliente_view {
 		arraybotones[6] = btn_C1;
 
 		btn_C2 = new JButton("");
+		btn_C2.setName("btn_C2");
 		btn_C2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_C2.setEnabled(false);
-				btn_C2.setText(valorSimbolo);
+
 				nombreBotonMemoria = btn_C2.getName();
 				enviarInfo(7);
 
@@ -357,10 +332,10 @@ public class Cliente_view {
 		arraybotones[7] = btn_C2;
 
 		btn_C3 = new JButton("");
+		btn_C3.setName("btn_C3");
 		btn_C3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				btn_C3.setEnabled(false);
-				btn_C3.setText(valorSimbolo);
+
 				nombreBotonMemoria = btn_C3.getName();
 				enviarInfo(8);
 

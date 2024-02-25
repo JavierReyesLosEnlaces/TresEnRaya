@@ -58,10 +58,10 @@ public class ServidorTCP {
 class Juego {
 	// Se inicializa el tablero
 	static Jugador[] tablero = new Jugador[9];
-	public static Boolean jugando = true;
+	public  Boolean jugando = true;
 	static Jugador jugadorActivo;
 
-	public static boolean seHaGanado(Jugador[] tablero) {
+	public boolean seHaGanado(Jugador[] tablero) {
 		return (tablero[0] != null && tablero[0] == tablero[1] && tablero[0] == tablero[2])
 				|| (tablero[3] != null && tablero[3] == tablero[4] && tablero[3] == tablero[5])
 				|| (tablero[6] != null && tablero[6] == tablero[7] && tablero[6] == tablero[8])
@@ -72,11 +72,11 @@ class Juego {
 				|| (tablero[2] != null && tablero[2] == tablero[4] && tablero[2] == tablero[6]);
 	}
 
-	public static void logDePartidas() {
+	public void logDePartidas() {
 
 	}
 
-	public static void checkJugada(int posicion, Jugador jugador) {
+	public synchronized void checkJugada(int posicion, Jugador jugador) {
 		if (jugador != jugadorActivo) {
 			throw new IllegalStateException("No es tu turno. ");
 		} else if (jugador.oponente == null) {
@@ -89,9 +89,8 @@ class Juego {
 	// CLASE JUGADOR
 	class Jugador implements Runnable {
 
-		public static DataInputStream dis;
-		public static DataOutputStream dos;
-		public static DataOutputStream dosOponente;
+		public  DataInputStream dis;
+		public DataOutputStream dos;
 
 		String nombreJugador;
 		Jugador oponente;
@@ -150,7 +149,6 @@ class Juego {
 					if (this.getOponente() == null) {
 						oponente = jugadorActivo;
 						oponente.oponente = this;
-						dosOponente = new DataOutputStream(oponente.getSocketDelCliente().getOutputStream());
 					}
 				}
 	
@@ -172,35 +170,41 @@ class Juego {
 				while (jugando) {
 					try {
 						System.out.println("LLEGA HASTA AQUÍ");
-						int posicion = dis.readInt(); // AQUÍ DEBE ESPERAR A QUE EL CLIENTE PRESIONE UN BOTÓN
+						
+							int posicion = dis.readInt(); // AQUÍ DEBE ESPERAR A QUE EL CLIENTE PRESIONE UN BOTÓN
+							System.out.println(posicion);
+							// chequear lo jugada
+							checkJugada(posicion, this);
+							
+							System.out.println(posicion);
+							// Actualizar el tablero
+							tablero[posicion] = this;
 
-						// chequear lo jugada
-						checkJugada(posicion, this);
+							// Se cambian los roles
+							jugadorActivo = this.oponente;
+							System.out.println("jugador asctivo = "+jugadorActivo.nombreJugador);
 
-						// Actualizar el tablero
-						tablero[posicion] = this;
+							// Se envía la posicion al oponente
+							oponente.dos.writeUTF("4" + posicion);
+							dos.writeUTF("5");
+								
+							// Se manda el resultado al oponente
+							if (seHaGanado(tablero)) {
+								// Enviar información al jugadorActivo
+								dos.writeUTF("2Has ganado, " + this.getNombreJugador());
 
-						// Se cambian los roles
-						jugadorActivo = this.oponente;
+								// Enviar información al oponente
+								oponente.dos.writeUTF("2Has ganado, " + oponente.getNombreJugador());
 
-						// Se envía la posicion al oponente
-						dosOponente.writeUTF("4" + posicion);
-
-						// Se manda el resultado al oponente
-						if (seHaGanado(tablero)) {
-							// Enviar información al jugadorActivo
-							dos.writeUTF("2Has ganado, " + this.getNombreJugador());
-
-							// Enviar información al oponente
-							dosOponente.writeUTF("2Has ganado, " + oponente.getNombreJugador());
-
-							jugando = false;
-							// logDePartidas();
-						}
+								jugando = false;
+								// logDePartidas();
+							}
+						
 
 					} catch (IOException e) {
 						e.printStackTrace();
 					} catch (IllegalStateException e) {
+						System.out.println("Excepcion");
 						dos.writeUTF("3" + e.getMessage());
 					}
 				}
