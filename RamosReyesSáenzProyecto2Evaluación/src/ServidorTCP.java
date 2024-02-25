@@ -1,15 +1,38 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.concurrent.Executors;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 public class ServidorTCP {
 
 	public static DataInputStream disJugador1, disJugador2;
+	public static Socket socketDelCliente1, socketDelCliente2;
+
 	public static void main(String[] args) {
 
 		Integer turno = 0;
@@ -34,23 +57,34 @@ public class ServidorTCP {
 			var pool = Executors.newFixedThreadPool(200);
 			Juego juego = new Juego();
 
-			Socket socketDelCliente1 = socketDelServidor.accept();
+			socketDelCliente1 = socketDelServidor.accept();
 			disJugador1 = new DataInputStream(socketDelCliente1.getInputStream());
 			String nombreJugador1 = disJugador1.readUTF();
 			pool.execute(juego.new Jugador(nombreJugador1, socketDelCliente1, 'X'));
+			juego.numeroJugadores++;
 
-			Socket socketDelCliente2 = socketDelServidor.accept();
+			socketDelCliente2 = socketDelServidor.accept();
 			disJugador2 = new DataInputStream(socketDelCliente2.getInputStream());
 			String nombreJugador2 = disJugador2.readUTF();
 			pool.execute(juego.new Jugador(nombreJugador2, socketDelCliente2, 'O'));
-
+			juego.numeroJugadores++;
 
 			System.out.println("Se han creado los jugadores correctamente. ");
+
+			while (true) {
+				if (juego.numeroJugadores != 2) {
+					socketDelCliente1.close();
+					socketDelCliente2.close();
+					socketDelServidor.close();
+					System.exit(0);
+				}
+			}
 
 		} catch (IOException ioe) {
 			System.err.println("Error al abrir el socket de servidor : " + ioe);
 			System.exit(-1);
 		}
+
 	}
 }
 
@@ -58,8 +92,12 @@ public class ServidorTCP {
 class Juego {
 	// Se inicializa el tablero
 	static Jugador[] tablero = new Jugador[9];
-	public  Boolean jugando = true;
+	public Boolean jugando = true;
+	public int turno = 0;
 	static Jugador jugadorActivo;
+	public static int numeroJugadores;
+	public SecretKey claveSecreta;
+	public Cipher cipher;
 
 	public boolean seHaGanado(Jugador[] tablero) {
 		return (tablero[0] != null && tablero[0] == tablero[1] && tablero[0] == tablero[2])
@@ -80,16 +118,18 @@ class Juego {
 		if (jugador != jugadorActivo) {
 			throw new IllegalStateException("No es tu turno. ");
 		} else if (jugador.oponente == null) {
+
 			throw new IllegalStateException("No tienes oponente");
 		} else if (tablero[posicion] != null) {
 			throw new IllegalStateException("Celda ocupada");
 		}
 	}
 
+	
 	// CLASE JUGADOR
 	class Jugador implements Runnable {
 
-		public  DataInputStream dis;
+		public DataInputStream dis;
 		public DataOutputStream dos;
 
 		String nombreJugador;
@@ -145,13 +185,13 @@ class Juego {
 
 				if (this.simbolo == 'X') {
 					jugadorActivo = this;
-				}else {
+				} else {
 					if (this.getOponente() == null) {
 						oponente = jugadorActivo;
 						oponente.oponente = this;
 					}
 				}
-	
+
 				/*
 				 * if(this.simbolo == 'X') { jugadorActivo = this;
 				 * 
@@ -167,46 +207,88 @@ class Juego {
 
 				// El jugador va a estar a la escucha de la posicion clickada por el cliente
 				// [enviarInfo()]
+
 				while (jugando) {
 					try {
+						/*
+						 * 
+						 * if(turno!=0 && oponente == null) { dos.writeUTF("6");
+						 * System.out.println("Comprobacion de Santi"); //break;; System.exit(0); }
+						 */
+
 						System.out.println("LLEGA HASTA AQUÍ");
-						
-							int posicion = dis.readInt(); // AQUÍ DEBE ESPERAR A QUE EL CLIENTE PRESIONE UN BOTÓN
-							System.out.println(posicion);
-							// chequear lo jugada
-							checkJugada(posicion, this);
+
+						int posicion = dis.readInt(); // AQUÍ DEBE ESPERAR A QUE EL CLIENTE PRESIONE UN BOTÓN
+
+						System.out.println(posicion);
+						// chequear lo jugada
+						checkJugada(posicion, this);
+
+						System.out.println(posicion);
+						// Actualizar el tablero
+						tablero[posicion] = this;
+
+						// Se cambian los roles
+						jugadorActivo = this.oponente;
+						System.out.println("jugador activo = " + jugadorActivo.nombreJugador);
+
+						// Se envía la posicion al oponente
+						oponente.dos.writeUTF("4" + posicion);
+						dos.writeUTF("5");
+
+						// Se manda el resultado al oponente
+						if (seHaGanado(tablero)) {
+
+							crearRegistroEncriptadoEnLog(this.nombreJugador, oponente.getNombreJugador());
+							String resultado = getRegistrosEncriptados();
 							
-							System.out.println(posicion);
-							// Actualizar el tablero
-							tablero[posicion] = this;
+							// Enviar información al jugadorActivo
+							dos.writeUTF("2Has ganado, " + this.getNombreJugador()+"\n"+resultado);
 
-							// Se cambian los roles
-							jugadorActivo = this.oponente;
-							System.out.println("jugador asctivo = "+jugadorActivo.nombreJugador);
+							// Enviar información al oponente
+							oponente.dos.writeUTF("2Has perdido, " + oponente.getNombreJugador()+"\n"+resultado);
 
-							// Se envía la posicion al oponente
-							oponente.dos.writeUTF("4" + posicion);
-							dos.writeUTF("5");
-								
-							// Se manda el resultado al oponente
-							if (seHaGanado(tablero)) {
-								// Enviar información al jugadorActivo
-								dos.writeUTF("2Has ganado, " + this.getNombreJugador());
+							jugando = false;
+							numeroJugadores -= 2;
 
-								// Enviar información al oponente
-								oponente.dos.writeUTF("2Has ganado, " + oponente.getNombreJugador());
+							dis.close();
+							dos.close();
+							oponente.dos.close();
+							System.exit(0);
 
-								jugando = false;
-								// logDePartidas();
-							}
-						
+						}
 
+					} catch (SocketException e) {
+						try {
+							System.out.println("Comprobacion de Santi2");
+							oponente.dos.writeUTF("6");
+							oponente.oponente = null;
+							oponente = null;
+							System.exit(0);
+						} catch (Exception f) {
+							System.out.println("Fin de la partida. ");
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					} catch (IllegalStateException e) {
 						System.out.println("Excepcion");
 						dos.writeUTF("3" + e.getMessage());
+					} catch (InvalidKeyException e) {
+						e.printStackTrace();
+					} catch (NoSuchAlgorithmException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (NoSuchPaddingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IllegalBlockSizeException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (BadPaddingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
+					turno++;
 				}
 			} catch (IOException e1) {
 				e1.printStackTrace();
@@ -214,4 +296,49 @@ class Juego {
 		}
 	}
 
+	public void crearRegistroEncriptadoEnLog(String nombreGanador, String nombrePerdedor)
+			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+			IllegalBlockSizeException, BadPaddingException {
+		BufferedWriter writer = new BufferedWriter(new FileWriter("logDePartidas.txt", true));
+        LocalDateTime fechaHoraActual = LocalDateTime.now();
+        
+        String fechaFormateada = fechaHoraActual.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
+
+		String frase = "Partida con fecha " + fechaFormateada + " -> Ganador: " + nombreGanador + ", Perdedor: " + nombrePerdedor;
+
+		//claveSecreta = KeyGenerator.getInstance("AES").generateKey();
+		//cipher = Cipher.getInstance("AES");
+		//cipher.init(Cipher.ENCRYPT_MODE, claveSecreta);
+		//byte[] bytestextoEncriptado = cipher.doFinal(frase.getBytes());
+		String textoEncriptado = Base64.getEncoder().encodeToString(frase.getBytes());
+
+		// Escribimos la frase en el fichero
+		writer.write(textoEncriptado + "\n");
+		writer.flush();
+		writer.close();
+	}
+
+	public String getRegistrosEncriptados() throws NoSuchAlgorithmException, IOException,
+			NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+
+		//claveSecreta = KeyGenerator.getInstance("AES").generateKey();
+		BufferedReader reader = new BufferedReader(new FileReader("logDePartidas.txt"));
+		String frase, resultado = "";
+
+		while ((frase = reader.readLine()) != null) {
+
+			//byte[] fraseEncriptada = Base64.getDecoder().decode(frase);
+			//cipher = Cipher.getInstance("AES");
+
+			// Inicializar Cipher en modo descifrado con la clave secreta
+			//cipher.init(Cipher.DECRYPT_MODE, claveSecreta);
+
+			// Descifrar el texto
+			byte[] fraseDesencriptadaBytes = Base64.getDecoder().decode(frase.getBytes());
+			String faseDesencriptada = new String(fraseDesencriptadaBytes);
+			resultado+=faseDesencriptada+"\n";
+		}
+
+		return resultado;
+	}
 }

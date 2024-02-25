@@ -11,20 +11,15 @@ import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.Normalizer.Form;
-import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 
 public class Cliente_view {
 
 	// Variable turno
 	public Integer turno;
-
 	private static DataInputStream dis;
 	private static DataOutputStream dos = null;
 
@@ -48,9 +43,11 @@ public class Cliente_view {
 	private static Cliente_view window;
 	private static String respuesta;
 	private static JLabel lb_usuario;
+	private static JLabel lb_simbolo;
 
 	private static String nombreBotonMemoria;
 	private static JButton[] arraybotones = new JButton[9];
+	private static String log;
 
 	public static void main(String[] args) {
 				// 1. SE INICIA LA INTERFAZ
@@ -97,6 +94,7 @@ public class Cliente_view {
 						dos = new DataOutputStream(socketDelCliente.getOutputStream());
 						dos.writeUTF(respuesta);
 						lb_usuario.setText(respuesta);
+						
 					}
 					JOptionPane.showMessageDialog(null, "Se ha enviado tu nombre al servidor", "Enviando",
 							JOptionPane.INFORMATION_MESSAGE);
@@ -126,11 +124,24 @@ public class Cliente_view {
 								valorSimboloOponente = "O";
 							} else {
 								valorSimboloOponente = "X";
+								bloquearBotones();
 							}
+							lb_simbolo.setText(valorSimbolo);
 						} else if (input.startsWith("2")) {
 							mensajeFinal = input.substring(1);
-							JOptionPane.showMessageDialog(null, mensajeFinal);
-							break;
+							String mensajeResultado = mensajeFinal.split("\n")[0];
+							
+							String logFinal= "";
+							String[] array  = mensajeFinal.split("\n");
+							for (int i = 0; i < array.length; i++) {
+								if(i!=0) {
+									logFinal+=array[i]+"\n";
+								}
+							}						
+							JOptionPane.showMessageDialog(null, mensajeResultado, "Gracias por participar", JOptionPane.PLAIN_MESSAGE);
+							JOptionPane.showMessageDialog(null, logFinal, "Log de partidas", JOptionPane.PLAIN_MESSAGE);
+						    
+							System.exit(0);
 						} else if (input.startsWith("3")) {
 							mensajeFinal = input.substring(1);
 							JOptionPane.showMessageDialog(null, mensajeFinal);
@@ -143,15 +154,23 @@ public class Cliente_view {
 							System.out.println(input);
 							mensajeFinal = input.substring(1);
 							actualizarBoton(mensajeFinal);
+							desbloquearBotones();
 						}else if(input.startsWith("5")) {
 							jugadaPermitida();
+						} else if(input.equals("6")) {
+							JOptionPane.showMessageDialog(null, "Tu oponente se ha rendido", "Cobarde", JOptionPane.INFORMATION_MESSAGE);
+							System.exit(0);
 						}
+						
 					} catch (IOException e) {
 						e.printStackTrace();
+						System.exit(0); // para que no se quede en bucle
 					}
 				}
 
 			}
+
+
 
 			private static void jugadaPermitida() {
 				for (int i = 0; i < arraybotones.length; i++) {
@@ -205,20 +224,20 @@ public class Cliente_view {
 
 		// Textos
 
-		JLabel lb_turno = new JLabel("Es el turno de ");
+		JLabel lb_turno = new JLabel("Jugador:");
 		lb_turno.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lb_turno.setBounds(59, 259, 108, 19);
+		lb_turno.setBounds(59, 259, 70, 19);
 		frmTresEnRaya.getContentPane().add(lb_turno);
 
-		lb_usuario = new JLabel("Usuario ");
+		lb_usuario = new JLabel("Jugador");
 		lb_usuario.setForeground(new Color(255, 0, 128));
 		lb_usuario.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lb_usuario.setBounds(159, 260, 95, 17);
+		lb_usuario.setBounds(124, 260, 95, 17);
 		frmTresEnRaya.getContentPane().add(lb_usuario);
 
-		JLabel lbl_recordatorio = new JLabel("X: Usuario1    O: Usuario2");
-		lbl_recordatorio.setFont(new Font("Tahoma", Font.PLAIN, 11));
-		lbl_recordatorio.setBounds(59, 286, 171, 11);
+		JLabel lbl_recordatorio = new JLabel("Símbolo:");
+		lbl_recordatorio.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lbl_recordatorio.setBounds(59, 286, 58, 11);
 		frmTresEnRaya.getContentPane().add(lbl_recordatorio);
 
 		// Botones (A-C: columnas, numeros: filas)
@@ -344,6 +363,12 @@ public class Cliente_view {
 		btn_C3.setBounds(215, 176, 70, 70);
 		frmTresEnRaya.getContentPane().add(btn_C3);
 		arraybotones[8] = btn_C3;
+		
+		lb_simbolo = new JLabel("Simbolo");
+		lb_simbolo.setForeground(new Color(255, 0, 128));
+		lb_simbolo.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lb_simbolo.setBounds(124, 283, 95, 17);
+		frmTresEnRaya.getContentPane().add(lb_simbolo);
 	}
 
 	public static void enviarInfo(int posicion) {
@@ -354,12 +379,22 @@ public class Cliente_view {
 		} catch (Exception e) {
 			System.out.println("No se ha enviado 'botones'");
 		}
-		// LOS BOTONES DEL TABLERO SE BLOQUEAN
-		/*
-		 * btn_A1.setEnabled(false); btn_A2.setEnabled(false); btn_A3.setEnabled(false);
-		 * btn_B1.setEnabled(false); btn_B2.setEnabled(false); btn_B3.setEnabled(false);
-		 * btn_C1.setEnabled(false); btn_C2.setEnabled(false); btn_C3.setEnabled(false);
-		 */
+		
+		 bloquearBotones();
+		 
 	}
 
+	private static void bloquearBotones() {
+		btn_A1.setEnabled(false); btn_A2.setEnabled(false); btn_A3.setEnabled(false);
+		 btn_B1.setEnabled(false); btn_B2.setEnabled(false); btn_B3.setEnabled(false);
+		 btn_C1.setEnabled(false); btn_C2.setEnabled(false); btn_C3.setEnabled(false);
+	}
+	
+	private static void desbloquearBotones() {		
+		for (int i = 0; i < arraybotones.length; i++) {
+			if(arraybotones[i].getText()=="") {
+				arraybotones[i].setEnabled(true);
+			}			
+		}
+	}
 }
