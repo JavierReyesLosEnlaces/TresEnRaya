@@ -69,7 +69,7 @@ public class ServidorTCP {
 			pool.execute(juego.new Jugador(nombreJugador2, socketDelCliente2, 'O'));
 			juego.numeroJugadores++;
 
-			System.out.println("Se han creado los jugadores correctamente. ");
+		
 
 			while (true) {
 				if (juego.numeroJugadores != 2) {
@@ -194,12 +194,6 @@ class Juego {
 					}
 				}
 
-				/*
-				 * if(this.simbolo == 'X') { jugadorActivo = this;
-				 * 
-				 * }else if (this.simbolo == 'O') { oponente = jugadorActivo;
-				 * jugadorActivo.oponente = this; }
-				 */
 
 				// 2. Envio de la marca al cliente, los dos jugadores mandan su marca a su
 				// resoectivo cliente
@@ -213,27 +207,20 @@ class Juego {
 
 				while (jugando && turno<9) {
 					try {
-						/*
-						 * 
-						 * if(turno!=0 && oponente == null) { dos.writeUTF("6");
-						 * System.out.println("Comprobacion de Santi"); //break;; System.exit(0); }
-						 */
 
-						System.out.println("LLEGA HASTA AQUÍ");
 
 						int posicion = dis.readInt(); // AQUÍ DEBE ESPERAR A QUE EL CLIENTE PRESIONE UN BOTÓN
 
-						System.out.println(posicion);
+						
 						// chequear lo jugada
 						checkJugada(posicion, this);
 
-						System.out.println(posicion);
+						
 						// Actualizar el tablero
 						tablero[posicion] = this;
 
 						// Se cambian los roles
 						jugadorActivo = this.oponente;
-						System.out.println("jugador activo = " + jugadorActivo.nombreJugador);
 
 						// Se envía la posicion al oponente
 						oponente.dos.writeUTF("4" + posicion);
@@ -263,13 +250,13 @@ class Juego {
 
 					} catch (SocketException e) {
 						try {
-							System.out.println("Comprobacion de Santi2");
+							
 							oponente.dos.writeUTF("6");
 							oponente.oponente = null;
 							oponente = null;
 							System.exit(0);
 						} catch (Exception f) {
-							System.out.println("Fin de la partida. ");
+							System.exit(0);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -315,10 +302,6 @@ class Juego {
 
 		String frase = "Partida con fecha " + fechaFormateada + " -> Ganador: " + nombreGanador + ", Perdedor: " + nombrePerdedor;
 
-		//claveSecreta = KeyGenerator.getInstance("AES").generateKey();
-		//cipher = Cipher.getInstance("AES");
-		//cipher.init(Cipher.ENCRYPT_MODE, claveSecreta);
-		//byte[] bytestextoEncriptado = cipher.doFinal(frase.getBytes());
 		String textoEncriptado = Base64.getEncoder().encodeToString(frase.getBytes());
 
 		// Escribimos la frase en el fichero
@@ -330,17 +313,10 @@ class Juego {
 	public String getRegistrosEncriptados() throws NoSuchAlgorithmException, IOException,
 			NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
-		//claveSecreta = KeyGenerator.getInstance("AES").generateKey();
 		BufferedReader reader = new BufferedReader(new FileReader("logDePartidas.txt"));
 		String frase, resultado = "";
 
 		while ((frase = reader.readLine()) != null) {
-
-			//byte[] fraseEncriptada = Base64.getDecoder().decode(frase);
-			//cipher = Cipher.getInstance("AES");
-
-			// Inicializar Cipher en modo descifrado con la clave secreta
-			//cipher.init(Cipher.DECRYPT_MODE, claveSecreta);
 
 			// Descifrar el texto
 			byte[] fraseDesencriptadaBytes = Base64.getDecoder().decode(frase.getBytes());

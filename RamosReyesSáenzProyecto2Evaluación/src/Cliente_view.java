@@ -51,9 +51,9 @@ public class Cliente_view {
 	private static String log;
 
 	public static void main(String[] args) {
+		
 				// 1. SE INICIA LA INTERFAZ
 				try {
-					
 					window = new Cliente_view();
 					window.frmTresEnRaya.setVisible(false);
 
@@ -75,7 +75,7 @@ public class Cliente_view {
 							System.out.println("Cliente conectado");
 
 						} catch (Exception e) {
-							System.out.println("Cliente no conectado");
+							e.printStackTrace();
 						}
 					} catch (UnknownHostException uhe) {
 						JOptionPane.showMessageDialog(null, "Ip introducida no válida", "Error",
@@ -125,17 +125,12 @@ public class Cliente_view {
 					try {
 
 						String input = dis.readUTF();
-						if (input == null) {
-							System.out.println("El input es null");
-						}
 
 						if (input.startsWith("1")) {
 							// estamos recibiendo el simbolo para asignarselo al cliente
 							valorSimbolo = (input.charAt(1) + "");
 							if (valorSimbolo.equals("X")) {
 								valorSimboloOponente = "O";
-								
-								
 							} else {
 								valorSimboloOponente = "X";
 								bloquearBotones();
@@ -151,7 +146,7 @@ public class Cliente_view {
 								if(i!=0) {
 									logFinal+=array[i]+"\n";
 								}
-							}						
+							}									
 							JOptionPane.showMessageDialog(null, mensajeResultado, "Gracias por participar", JOptionPane.PLAIN_MESSAGE);
 							JOptionPane.showMessageDialog(null, logFinal, "Log de partidas", JOptionPane.PLAIN_MESSAGE);
 						    
