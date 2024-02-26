@@ -189,6 +189,8 @@ class Juego {
 					if (this.getOponente() == null) {
 						oponente = jugadorActivo;
 						oponente.oponente = this;
+					}else {
+						oponente.dos.writeUTF("0");
 					}
 				}
 
@@ -203,12 +205,13 @@ class Juego {
 				// resoectivo cliente
 
 				dos.writeUTF("1" + this.simbolo);
+				
 				// 1 + dato: estamos recibiendo el simbolo para asignarselo al cliente
 
 				// El jugador va a estar a la escucha de la posicion clickada por el cliente
 				// [enviarInfo()]
 
-				while (jugando) {
+				while (jugando && turno<9) {
 					try {
 						/*
 						 * 
@@ -290,6 +293,12 @@ class Juego {
 					}
 					turno++;
 				}
+				dos.writeUTF("7");
+				oponente.dos.writeUTF("7");
+				dis.close();
+				dos.close();
+				System.exit(0);
+				
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
