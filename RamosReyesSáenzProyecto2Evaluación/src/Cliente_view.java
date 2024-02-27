@@ -153,11 +153,17 @@ public class Cliente_view {
 							System.exit(0);
 						} else if (input.startsWith("3")) {
 							mensajeFinal = input.substring(1);
+							
 							JOptionPane.showMessageDialog(null, mensajeFinal,"Fin del juego", JOptionPane.INFORMATION_MESSAGE);
 							// DESSELECCIONAMOS EL BOTÓN ERRONEO
 							if(nombreBotonMemoria!=null) {
 								deseleccionBoton();
 							}
+							
+							if(mensajeFinal.equals("No tienes oponente")) {
+								desbloquearBotones();
+							}
+							
 						} else if (input.startsWith("4")) {
 							System.out.println(input);
 							mensajeFinal = input.substring(1);

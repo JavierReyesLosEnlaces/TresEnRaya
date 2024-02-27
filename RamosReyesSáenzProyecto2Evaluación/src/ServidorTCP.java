@@ -263,6 +263,7 @@ class Juego {
 					} catch (IllegalStateException e) {
 						System.out.println("Excepcion");
 						dos.writeUTF("3" + e.getMessage());
+						turno--;
 					} catch (InvalidKeyException e) {
 						e.printStackTrace();
 					} catch (NoSuchAlgorithmException e) {
