@@ -124,6 +124,41 @@ class Juego {
 			throw new IllegalStateException("Celda ocupada");
 		}
 	}
+	
+	public void crearRegistroEncriptadoEnLog(String nombreGanador, String nombrePerdedor)
+			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+			IllegalBlockSizeException, BadPaddingException {
+		BufferedWriter writer = new BufferedWriter(new FileWriter("logDePartidas.txt", true));
+        LocalDateTime fechaHoraActual = LocalDateTime.now();
+        
+        String fechaFormateada = fechaHoraActual.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
+
+		String frase = "Partida con fecha " + fechaFormateada + " -> Ganador: " + nombreGanador + ", Perdedor: " + nombrePerdedor;
+
+		String textoEncriptado = Base64.getEncoder().encodeToString(frase.getBytes());
+
+		// Escribimos la frase en el fichero
+		writer.write(textoEncriptado + "\n");
+		writer.flush();
+		writer.close();
+	}
+
+	public String getRegistrosEncriptados() throws NoSuchAlgorithmException, IOException,
+			NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+
+		BufferedReader reader = new BufferedReader(new FileReader("logDePartidas.txt"));
+		String frase, resultado = "";
+
+		while ((frase = reader.readLine()) != null) {
+
+			// Descifrar el texto
+			byte[] fraseDesencriptadaBytes = Base64.getDecoder().decode(frase.getBytes());
+			String faseDesencriptada = new String(fraseDesencriptadaBytes);
+			resultado+=faseDesencriptada+"\n";
+		}
+
+		return resultado;
+	}
 
 	
 	// CLASE JUGADOR
@@ -291,40 +326,5 @@ class Juego {
 				e1.printStackTrace();
 			}
 		}
-	}
-
-	public void crearRegistroEncriptadoEnLog(String nombreGanador, String nombrePerdedor)
-			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-			IllegalBlockSizeException, BadPaddingException {
-		BufferedWriter writer = new BufferedWriter(new FileWriter("logDePartidas.txt", true));
-        LocalDateTime fechaHoraActual = LocalDateTime.now();
-        
-        String fechaFormateada = fechaHoraActual.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
-
-		String frase = "Partida con fecha " + fechaFormateada + " -> Ganador: " + nombreGanador + ", Perdedor: " + nombrePerdedor;
-
-		String textoEncriptado = Base64.getEncoder().encodeToString(frase.getBytes());
-
-		// Escribimos la frase en el fichero
-		writer.write(textoEncriptado + "\n");
-		writer.flush();
-		writer.close();
-	}
-
-	public String getRegistrosEncriptados() throws NoSuchAlgorithmException, IOException,
-			NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-
-		BufferedReader reader = new BufferedReader(new FileReader("logDePartidas.txt"));
-		String frase, resultado = "";
-
-		while ((frase = reader.readLine()) != null) {
-
-			// Descifrar el texto
-			byte[] fraseDesencriptadaBytes = Base64.getDecoder().decode(frase.getBytes());
-			String faseDesencriptada = new String(fraseDesencriptadaBytes);
-			resultado+=faseDesencriptada+"\n";
-		}
-
-		return resultado;
 	}
 }
