@@ -2,11 +2,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,17 +12,14 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.concurrent.Executors;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
@@ -36,18 +31,18 @@ public class ServidorTCP {
 
 	public static void main(String[] args) {
 
-		// Se consigue e indica la dirección IP del dispositivo ejecutando la clase "ServidorTCP"
+		// Se consigue la dirección IP del servidor y se muestra por consola
 		try {
 			System.out.println("LocalHost = " + InetAddress.getLocalHost().toString());
 		} catch (UnknownHostException uhe) {
 			System.err.println("No puedo saber la dirección IP local : " + uhe);
 		}
 
-		//Se intenta abrir un socket de servidor TCP en el puerto 40000, limitando el número de conexiones a dos		
+		// Se intenta abrir un socket de servidor TCP en el puerto 40000, limitando el número de conexiones a dos		
 		try (ServerSocket socketDelServidor = new ServerSocket(40000, 2)) {
 			
 			System.out.println("Esperando a que se conecten los usuarios...");
-			System.out.println("[El servidor se encuentra activo]");
+			System.out.println("Estado del servidor: ACTIVO\n...");
 			
 			// Se crea la variable "pool" que permite crear hasta 20 hilos de forma concurrente
 			var pool = Executors.newFixedThreadPool(20);
@@ -55,36 +50,39 @@ public class ServidorTCP {
 			// Se crea un objeto de la clase "Juego"
 			Juego juego = new Juego();
 
-			// Se crean los sockets de los clientes, sus DataInputStreams
+			// Se crean los sockets y los flujos de lectura de los clientes
 			socketDelCliente1 = socketDelServidor.accept();
 			disJugador1 = new DataInputStream(socketDelCliente1.getInputStream());
 			
 			// El servidor queda a la espera de recibir el nombre de usuario de sus jugadores
 			String nombreJugador1 = disJugador1.readUTF();
 			
-			// So todo ha ido bien, pool ejecutará un proceso en el que se une un jugador al juego 
+			// Si todo ha ido bien, "pool" abrirá un hilo que permitirá unir un jugador al juego 
 			// Se aumenta el número de jugadores a uno
 			pool.execute(juego.new Jugador(nombreJugador1, socketDelCliente1, 'X'));
 			juego.numeroJugadores++;
 
+			// Ocurre lo mismo con el otro cliente
 			socketDelCliente2 = socketDelServidor.accept();
 			disJugador2 = new DataInputStream(socketDelCliente2.getInputStream());
 			String nombreJugador2 = disJugador2.readUTF();
 			pool.execute(juego.new Jugador(nombreJugador2, socketDelCliente2, 'O'));
 			juego.numeroJugadores++;
 
-			/* A partir de ahora, en el caso de que el número de jugadores sea menor de dos, significará que uno de
-			   ellos ha salido o se ha perdido conexión, por lo que cerramos todos los sockets y la ejecución*/
+			/* A partir de ahora, si el número de jugadores es menor de dos, significa que uno de ellos se ha
+			   rendido o ha perdido la conexión, por lo que se cierran los sockets y la ejecución del servidor*/
 			while (true) {
 				if (juego.numeroJugadores != 2) {
 					socketDelCliente1.close();
 					socketDelCliente2.close();
 					socketDelServidor.close();
+					System.out.println("Estado del servidor: INACTIVO");
 					System.exit(0);
 				}
 			}
 		} catch (IOException ioe) {
 			System.err.println("Error al abrir el socket de servidor : " + ioe);
+			System.out.println("Estado del servidor: INACTIVO");
 			System.exit(-1);
 		}
 	}
@@ -94,7 +92,7 @@ public class ServidorTCP {
 class Juego {
 	
 	// Variables para la gestión de la clase "Juego"
-	static Jugador[] tablero = new Jugador[9];
+	static Jugador[] tablero = new Jugador[9]; // El tablero se concibe como un array de objetos "Jugador"
 	public Boolean jugando = true;
 	public int turno = 0;
 	static Jugador jugadorActivo;
@@ -156,8 +154,8 @@ class Juego {
 	}
 
 	
-	/* Clase "Jugador" (dentro de la clase "Juego") que implementa la interfaz "Runnable"
-	   Es necesario que la clase implemente "Runnable" para poder trabajar con ella dentro de hilos */	 	
+	/* Clase "Jugador" (dentro de la clase "Juego") que implementa la interfaz "Runnable".
+	   Es necesario que la clase implemente "Runnable" para poder trabajar con ella dentro de los hilos de ejecución */	 	
 	class Jugador implements Runnable {
 
 		// Variables para la gestión de la clase "Jugador"
@@ -208,7 +206,7 @@ class Juego {
 			this.oponente = oponente;
 		}
 
-		// Método de la interfaz "Runnable", se definen las tareas a realizar por los objetos de la clase Jugador
+		// Método "run()" propio de la interfaz "Runnable", se definen las tareas a realizar por los objetos de la clase Jugador
 		@Override
 		public void run() {
 			try {
@@ -227,20 +225,20 @@ class Juego {
 					}
 				}
 
-				/* Envío de la marca al cliente, los dos jugadores mandan su marca a su respectivo cliente	
+				/* Envío de la marca al cliente, los dos jugadores mandan su marca a su respectivo cliente.
 				   1 + DATO: estamos recibiendo el simbolo para asignarselo al cliente*/
 				dos.writeUTF("1" + this.simbolo);			
 
-				/* A partir de este momento el jugador va a estar a la escucha de la posicion clickada por el cliente -> enviarInfo()
-				   Mientras la variable "jugando" == true y el número de turnos sea menor que 9 (nº máximo de turnos posibles, nº de casillas) */								
+				/* A partir de este momento el jugador va a estar a la escucha de la posicion pulsada por el cliente -> enviarInfo()
+				   Mientras la variable "jugando" == true y el número de turnos sea menor que 9... (nº máximo de turnos posibles, nº de casillas) */								
 				while (jugando && turno<9) {
 					try {
 
-						// Aquí se espera a que el cliente presione un botón y comprobar la jugada
+						// Aquí se espera a que el cliente presione un botón y se comprueba la jugada
 						int posicion = dis.readInt(); 
 						checkJugada(posicion, this);
 						
-						// Actualizar el tablero (el tablero es un array de objetos "Jugador")
+						// Se actualiza el tablero (el tablero es un array de objetos "Jugador")
 						tablero[posicion] = this;
 
 						// Se cambian los roles y se envía la posición al oponente
@@ -251,66 +249,71 @@ class Juego {
 						// Se comprueba si se ha ganado en el tablero. Si se ha ganado:
 						if (seHaGanado(tablero)) {
 
-							// Se crea un nuevo registro, se consiguen los resultados 
+							// Se crea un nuevo registro en "logDePartidas.txt" y se consiguen los resultados 
 							crearRegistroEncriptadoEnLog(this.nombreJugador, oponente.getNombreJugador());
 							String resultado = getRegistrosDesencriptados();
 							
-							// Enviar información al jugadorActivo
+							// Se envían los resultados de la partida al jugador activo y al oponente
 							dos.writeUTF("2Has ganado, " + this.getNombreJugador()+"\n"+resultado);
-
-							// Enviar información al oponente
 							oponente.dos.writeUTF("2Has perdido, " + oponente.getNombreJugador()+"\n"+resultado);
 
+							/* Se pone la variable "jugando" a false, se reinicia el número de jugadores, se cierran los flujos de 
+							   comunicación y se cierra el programa*/
 							jugando = false;
 							numeroJugadores -= 2;
-
 							dis.close();
 							dos.close();
 							oponente.dos.close();
 							System.exit(0);
-
 						}
-
-					} catch (SocketException e) {
-						try {
-							
+					} catch (SocketException e) {	
+						/* Si el oponente se rinde, se va a producir una "SocketException", así que se manda un código "6" para
+						   que el cliente gestione ese escenario, se ponen los jugadores a null y se cierra el servidor.
+						   Si hay algún problema en el proceso, se cierra el programa igualmente. */
+						try {						
 							oponente.dos.writeUTF("6");
 							oponente.oponente = null;
 							oponente = null;
+							System.out.println("Estado del servidor: INACTIVO");
 							System.exit(0);
 						} catch (Exception f) {
+							System.out.println("Estado del servidor: INACTIVO");
 							System.exit(0);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
+						
+						/* Si tiene lugar una IllegalException de las que se contemplan en el método "checkJugada", se informa
+						   de ello al cliente mediante el codigo "3" y se reduce un turno para que el turno no cuente como válido*/
 					} catch (IllegalStateException e) {
 						dos.writeUTF("3" + e.getMessage());
 						turno--;
 					} catch (InvalidKeyException e) {
 						e.printStackTrace();
 					} catch (NoSuchAlgorithmException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (NoSuchPaddingException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (IllegalBlockSizeException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (BadPaddingException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					
+					// En cada iteración se suma un turno
 					turno++;
 				}
+				
+				/* Pasados los nueve turnos, si no existe resultado se considera empate entre los jugadores y 
+				   se envía un "7" a los clientes, lo cual permite que los clientes gestione el evento de empate.
+				   Acto seguido se cierran los flujos de comunicación y se mantiene el servidor encendido*/
 				dos.writeUTF("7");
 				oponente.dos.writeUTF("7");
 				dis.close();
 				dos.close();
-				System.exit(0);
 				
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			} catch (IOException io) {
+				io.printStackTrace();
 			}
 		}
 	}

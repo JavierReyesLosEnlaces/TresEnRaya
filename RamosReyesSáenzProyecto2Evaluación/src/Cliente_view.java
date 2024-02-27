@@ -11,6 +11,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.awt.event.ActionEvent;
 
@@ -45,7 +46,7 @@ public class Cliente_view {
 	private static JLabel lb_simbolo;
 	private JFrame frmTresEnRaya;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		// Se inicia la interfaz
 		try {
@@ -55,7 +56,7 @@ public class Cliente_view {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		ipServidor = JOptionPane.showInputDialog(null, "Introduce la IP del servidor.");
+		ipServidor = JOptionPane.showInputDialog(null, "Introduce la IP del servidor.", "¿A qué servidor quieres conectarte?", JOptionPane.QUESTION_MESSAGE);
 
 		// Se intenta que el cliente se conecte con el servidor
 		InetAddress direcc = null;
@@ -65,25 +66,30 @@ public class Cliente_view {
 				int puerto = 40000;
 				try {
 					socketDelCliente = new Socket(direcc, puerto);
-					System.out.println("Cliente conectado");
-				} catch (Exception e) {
-					e.printStackTrace();
+					System.out.println("Cliente conectado\n...");
+				} catch (SocketException e) { 
+					JOptionPane.showMessageDialog(null, "La IP introducida no es válida", "Error", JOptionPane.ERROR_MESSAGE);
+					System.out.println("Cliente desconectado");
+					System.exit(0);
 				}
-			} catch (UnknownHostException uhe) {
+			} catch (UnknownHostException uhe) { // El servidor de la IP existe o está encendido
 				JOptionPane.showMessageDialog(null, "La IP introducida no es válida", "Error", JOptionPane.ERROR_MESSAGE);
+				System.out.println("Cliente desconectado");
 				System.exit(0);
 			}
 		} else {
 			JOptionPane.showMessageDialog(null, "No has introducido ninguna IP", "Error", JOptionPane.ERROR_MESSAGE);
+			System.out.println("Cliente desconectado");
 			System.exit(0);
 		}
 
 		// Se pide el nombre al jugador
-		respuesta = JOptionPane.showInputDialog(null, "¿Cuál es tu nombre?");
+		respuesta = JOptionPane.showInputDialog(null, "¿Cuál es tu nombre?", "IP de servidor encontrada", JOptionPane.QUESTION_MESSAGE);
 		if (respuesta != null && !respuesta.isEmpty()) {
 			window.frmTresEnRaya.setVisible(true);
 		} else {
-			JOptionPane.showMessageDialog(null, "Cerrando la aplicación", "Cerrando", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Cerrando la aplicación", "Hasta la próxima", JOptionPane.INFORMATION_MESSAGE);
+			System.out.println("Cliente desconectado");
 			System.exit(0);
 		}
 
@@ -132,6 +138,7 @@ public class Cliente_view {
 					}
 					JOptionPane.showMessageDialog(null, mensajeResultado, "Gracias por participar", JOptionPane.PLAIN_MESSAGE);
 					JOptionPane.showMessageDialog(null, logFinal, "Log de partidas", JOptionPane.PLAIN_MESSAGE);
+					System.out.println("Cliente desconectado");
 					System.exit(0);
 
 				/*"3" - Se gestionan aquellos eventos en los que es necesario deseleccionar un botón o los casos en los 
@@ -141,7 +148,7 @@ public class Cliente_view {
 					 	   después, en servidor se comprueba si el "legal" que ese botón puede ser presionado */
 				} else if (input.startsWith("3")) {
 					mensajeFinal = input.substring(1);
-					JOptionPane.showMessageDialog(null, mensajeFinal, "Fin del juego", JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(null, mensajeFinal, "Un poco de paciencia...", JOptionPane.INFORMATION_MESSAGE);
 					if (nombreBotonMemoria != null) {
 						deseleccionBoton();
 					}
@@ -152,7 +159,6 @@ public class Cliente_view {
 				/* "4" - Se recoge la posición del botón que ha presionado el oponente, se actualiza el botón del jugador con 
 				         el movimiento del oponente y se  desbloquea su tablero para que el jugador pueda proceder con su turno */
 				} else if (input.startsWith("4")) {
-					System.out.println(input);
 					mensajeFinal = input.substring(1);
 					actualizarBoton(mensajeFinal);
 					desbloquearBotones();
@@ -164,11 +170,13 @@ public class Cliente_view {
 				// "6" - Gestiona el evento en el que el oponente se rinde y se termina el juego
 				} else if (input.equals("6")) {
 					JOptionPane.showMessageDialog(null, "Tu oponente se ha rendido", "Fin de partida", JOptionPane.INFORMATION_MESSAGE);
+					System.out.println("Cliente desconectado");
 					System.exit(0);
 					
 				// "7" - Gestiona el evento en el que tiene lugar un empate y termina el juego
 				} else if (input.equals("7")) {
-					JOptionPane.showMessageDialog(null, "Se ha creado un empate!!", "Fin del juego", JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Se ha creado un empate", "Fin del juego", JOptionPane.INFORMATION_MESSAGE);
+					System.out.println("Cliente desconectado");
 					System.exit(0);
 					
 				// "8" - Simplemente de desbloquean los botones del tablero
@@ -179,7 +187,8 @@ public class Cliente_view {
 			// Si no se puede registrar el movimiento correctamente, se informa de ello y se sale del programa
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(null, "No se ha podido registrar el movimiento\nSaliendo del programa", "Error", JOptionPane.ERROR_MESSAGE);
-				System.exit(0); // para que no se quede en bucle
+				System.out.println("Cliente desconectado");
+				System.exit(0); // Para que no se quede en bucle
 			}
 		}
 	}
