@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import javax.crypto.spec.SecretKeySpec;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
@@ -99,6 +100,10 @@ class Juego {
 	public int numeroJugadores;
 	public SecretKey claveSecreta;
 	public Cipher cipher;
+	
+	//encriptacion;
+	private static final String claveFija = "Tm9UYVNlY3JldEtleTEyMw==";
+    private static final byte[] clave = Base64.getDecoder().decode(claveFija);
 
 	// Este método valora si se ha dado un evento de victoria en el tablero
 	public boolean seHaGanado(Jugador[] tablero) {
@@ -124,34 +129,49 @@ class Juego {
 	}
 	
 	// Este método crea un registro encriptado de los resultados de la partida y lo escribe en un documento "logDePartidas.txt"
-	public void crearRegistroEncriptadoEnLog(String nombreGanador, String nombrePerdedor) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-		BufferedWriter writer = new BufferedWriter(new FileWriter("logDePartidas.txt", true));
+	public void crearRegistroEncriptadoEnLog(String nombreGanador, String nombrePerdedor) throws Exception {
+        BufferedWriter writer = new BufferedWriter(new FileWriter("logDePartidas.txt", true));
         LocalDateTime fechaHoraActual = LocalDateTime.now();
         
         String fechaFormateada = fechaHoraActual.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
-		String frase = "Partida con fecha " + fechaFormateada + " -> Ganador: " + nombreGanador + ", Perdedor: " + nombrePerdedor;
-		String textoEncriptado = Base64.getEncoder().encodeToString(frase.getBytes());
-
-		writer.write(textoEncriptado + "\n");
-		writer.flush();
-		writer.close();
-	}
+        String frase = "Partida con fecha " + fechaFormateada + " -> Ganador: " + nombreGanador + ", Perdedor: " + nombrePerdedor;
+        
+        // Configurar el cifrado AES usando la clave fija
+        SecretKeySpec secretKeySpec = new SecretKeySpec(clave, "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+        byte[] textoEncriptado = cipher.doFinal(frase.getBytes());
+        
+        // Convertir el texto encriptado a Base64 para que sea legible y seguro para guardar en un archivo de texto
+        String textoEncriptadoBase64 = Base64.getEncoder().encodeToString(textoEncriptado);
+        
+        // Escribir el texto encriptado en el archivo
+        writer.write(textoEncriptadoBase64 + "\n");
+        writer.flush();
+        writer.close();
+    }
 
 	// Este método desencripta el contenido de "logDePartidas.txt", lo almacena en una variable "resultado" y lo devuelve
-	public String getRegistrosDesencriptados() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public String getRegistrosDesencriptados() throws Exception {
+        BufferedReader reader = new BufferedReader(new FileReader("logDePartidas.txt"));
+        String frase, resultado = "";
 
-		BufferedReader reader = new BufferedReader(new FileReader("logDePartidas.txt"));
-		String frase, resultado = "";
+        // Configurar el cifrado AES para desencriptar usando la clave fija
+        SecretKeySpec secretKeySpec = new SecretKeySpec(clave, "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
 
-		while ((frase = reader.readLine()) != null) {	
-			byte[] fraseDesencriptadaBytes = Base64.getDecoder().decode(frase.getBytes());
-			String faseDesencriptada = new String(fraseDesencriptadaBytes);
-			resultado+=faseDesencriptada+"\n";
-		}
+        while ((frase = reader.readLine()) != null) {
+            // Desencriptar la frase
+            byte[] fraseEncriptadaBytes = Base64.getDecoder().decode(frase);
+            byte[] fraseDesencriptadaBytes = cipher.doFinal(fraseEncriptadaBytes);
+            String fraseDesencriptada = new String(fraseDesencriptadaBytes);
+            resultado += fraseDesencriptada + "\n";
+        }
 
-		reader.close();
-		return resultado;
-	}
+        reader.close();
+        return resultado;
+    }
 
 	
 	/* Clase "Jugador" (dentro de la clase "Juego") que implementa la interfaz "Runnable".
@@ -248,10 +268,13 @@ class Juego {
 
 						// Se comprueba si se ha ganado en el tablero. Si se ha ganado:
 						if (seHaGanado(tablero)) {
+							String resultado="";
 
 							// Se crea un nuevo registro en "logDePartidas.txt" y se consiguen los resultados 
-							crearRegistroEncriptadoEnLog(this.nombreJugador, oponente.getNombreJugador());
-							String resultado = getRegistrosDesencriptados();
+								crearRegistroEncriptadoEnLog(this.nombreJugador, oponente.getNombreJugador());
+								resultado= getRegistrosDesencriptados();
+							
+							
 							
 							// Se envían los resultados de la partida al jugador activo y al oponente
 							dos.writeUTF("2Has ganado, " + this.getNombreJugador()+"\n"+resultado);
@@ -297,6 +320,9 @@ class Juego {
 					} catch (IllegalBlockSizeException e) {
 						e.printStackTrace();
 					} catch (BadPaddingException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					
